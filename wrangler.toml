@@ -1,0 +1,27 @@
+name = "portfolio-sandbox"
+workers_dev = true
+main = "dist/server/entry.mjs"
+site = { bucket = "dist/client" }
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "portfolio_db"
+database_id = "29b8b8bb-385e-4a51-a695-97291dadd905"
+
+# KV namespace for rate limiting (optional)
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "df8935afedb94b629675bae5119fa7de"
+preview_id = "a891cea281034b4abc9c81fb742437ec"
+
+# Scheduled event - monthly wipe (1st of month at midnight UTC)
+[triggers]
+crons = ["0 0 1 * *"]
+
+# Environment variables
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[env.preview]
+vars = { ENVIRONMENT = "preview" }
