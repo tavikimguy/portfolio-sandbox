@@ -18,12 +18,26 @@ export interface PortfolioCard {
   items?: FolderItem[];
 }
 
+export interface CardSprite {
+  // One transparent sheet, frames left-to-right then top-to-bottom.
+  src: string;
+  frames: number;
+  cols: number;
+  rows: number;
+  fps: number;
+}
+
 export interface CardObject {
+  // Frame-stepped sprite sheet. Preferred over `video` when the artwork
+  // needs a real alpha channel: a sheet can be keyed per frame, and because
+  // playback is just a frame index, leaving the card can freeze it exactly
+  // where it is (a looping <video> or animated WebP cannot).
+  sprite?: CardSprite;
   // Idle frame — frame 0 of `video`, so hover starts exactly where the
   // still left off.
-  still: string;
-  // Plays on hover, pauses back to the still on leave.
-  video: string;
+  still?: string;
+  // Plays on hover, pauses in place on leave.
+  video?: string;
   // Set when the artwork is light-on-dark. The board is white, so the media
   // is inverted and multiplied into it: the dark ground goes to white and
   // drops out, the light logo goes dark and reads. Cheaper and safer than
@@ -359,14 +373,19 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
     // The rotating 3D monogram that stood for this project on the Framer
     // site. Cropped tight to the logo's own travel across the animation, so
     // it sits as an object rather than inside a 16:9 letterbox.
-    // Shown exactly as authored, dark ground included. The mark uses black
-    // AND white as design elements — black-filled W with white top faces, a
-    // white slab, black C with white edges — so the ground can't be keyed
-    // out without erasing half the logo, and inverting it flips the whole
-    // thing. It reads as a dark object on the light board.
+    // The rotating 3D monogram that stood for this project on Framer, keyed
+    // off its ground and recoloured to the project's own #ff6040 so both of
+    // its tones read on a light board. See build_sprite2.py notes: the mark's
+    // black fills are continuous with its ground, so the silhouette is
+    // derived from its white features rather than by keying a colour.
     object: {
-      still: '/assets/wfoc/logo-object-still.png',
-      video: '/assets/wfoc/logo-object.mp4',
+      sprite: {
+        src: '/assets/wfoc/logo-object-sprite.webp',
+        frames: 50,
+        cols: 10,
+        rows: 5,
+        fps: 12,
+      },
     },
     items: [
       {

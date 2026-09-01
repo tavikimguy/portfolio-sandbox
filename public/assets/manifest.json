@@ -2,8 +2,8 @@
   "source": "https://www.tavi.kim/",
   "fetchedAt": "2026-08-31",
   "note": "Mirrored from the live Framer site, then renamed descriptively (originals were opaque Framer hashes; `src` keeps the source URL). `pages` lists which route(s) referenced each asset; `shared/` holds assets used on more than one.",
-  "count": 46,
-  "totalBytes": 86755893,
+  "count": 45,
+  "totalBytes": 86472382,
   "assets": [
     {
       "file": "/assets/blueprint/between-sessions-community.png",
@@ -542,32 +542,18 @@
       "seconds": null
     },
     {
-      "file": "/assets/wfoc/logo-object-still.png",
+      "file": "/assets/wfoc/logo-object-sprite.webp",
       "kind": "image",
-      "mime": "image/png",
-      "width": 560,
-      "height": 574,
+      "mime": "image/webp",
+      "width": 3200,
+      "height": 1640,
       "seconds": null,
-      "derivedFrom": "/assets/wfoc/logo-object.mp4",
-      "note": "Frame 0 of logo-object.mp4 — the idle state before hover.",
-      "bytes": 155760,
+      "bytes": 727704,
       "pages": [
         "wfoc"
-      ]
-    },
-    {
-      "file": "/assets/wfoc/logo-object.mp4",
-      "kind": "video",
-      "mime": "video/mp4",
-      "width": 560,
-      "height": 574,
-      "seconds": 4.2,
+      ],
       "derivedFrom": "/assets/shared/wfoc-logo-animation.mp4",
-      "note": "Cropped to the logo's full travel across all 50 frames (920x942 at 500,76 of 1920x1080) and re-encoded, with darks clamped toward black. Card object for Wharton Future of Cities.",
-      "bytes": 855455,
-      "pages": [
-        "wfoc"
-      ]
+      "note": "50-frame 10x5 sprite sheet, cropped to the mark's full travel (920x942 at 500,76), ground keyed off by silhouette and recoloured to #ff6040 + near-black. Frame-stepped on hover so it can freeze in place on leave."
     },
     {
       "file": "/assets/wfoc/merchandise.png",

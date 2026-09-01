@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import type { PortfolioCard } from '@/lib/portfolio-cards';
 import { useCanvasStore } from '@/stores/canvas';
@@ -51,10 +51,48 @@ export function Card({
   // separate from `isDragging` (drag lives in Canvas.tsx) since resize/
   // rotate are driven entirely by this component's own pointer handlers.
   const [isInteracting, setIsInteracting] = useState(false);
-  // Object cards play their clip on hover; see handleHover.
+  // Object cards animate on hover; see handleHover.
   const videoRef = useRef<HTMLVideoElement>(null);
+  const sprite = card.object?.sprite;
+  const [spriteFrame, setSpriteFrame] = useState(0);
+  const rafRef = useRef<number | null>(null);
+  const lastStepRef = useRef(0);
+
+  const stopSprite = () => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  };
+
+  // Advance on a clock rather than once per frame, so the sprite runs at its
+  // authored fps regardless of the display's refresh rate.
+  const startSprite = () => {
+    if (!sprite || rafRef.current !== null) return;
+    lastStepRef.current = performance.now();
+    const step = 1000 / sprite.fps;
+    const tick = (now: number) => {
+      const elapsed = now - lastStepRef.current;
+      if (elapsed >= step) {
+        const advance = Math.floor(elapsed / step);
+        lastStepRef.current += advance * step;
+        setSpriteFrame((f) => (f + advance) % sprite.frames);
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  useEffect(() => stopSprite, []);
 
   const handleHover = (entering: boolean) => {
+    if (sprite) {
+      // Stopping the loop is all that's needed — spriteFrame keeps its value,
+      // so the logo rests on whatever frame it reached.
+      if (entering) startSprite();
+      else stopSprite();
+      return;
+    }
     const video = videoRef.current;
     if (!video) return;
     if (entering) {
@@ -204,10 +242,26 @@ export function Card({
           content. What's "inside" it shoots out as separate item cards
           (see Canvas.tsx) when isExpanded flips on. */}
       {card.object ? (
-        // Just the clip, never swapped out: the still is only its poster, so
-        // leaving the card pauses the rotation wherever it got to instead of
-        // snapping back to the start.
-        <div className="relative h-full w-full overflow-hidden rounded-xl pointer-events-none select-none">
+        // Nothing here is ever swapped out on leave — the sprite keeps its
+        // frame index and the video only pauses — so the artwork rests where
+        // the rotation stopped rather than snapping back to the start.
+        <div className="relative h-full w-full pointer-events-none select-none">
+          {sprite ? (
+            // One sheet, positioned by frame index. The percentage form of
+            // background-position addresses cell centres, so cols-1/rows-1
+            // is the correct divisor, not cols/rows.
+            <div
+              className="h-full w-full"
+              style={{
+                backgroundImage: `url(${sprite.src})`,
+                backgroundSize: `${sprite.cols * 100}% ${sprite.rows * 100}%`,
+                backgroundPosition: `${
+                  sprite.cols > 1 ? ((spriteFrame % sprite.cols) / (sprite.cols - 1)) * 100 : 0
+                }% ${sprite.rows > 1 ? (Math.floor(spriteFrame / sprite.cols) / (sprite.rows - 1)) * 100 : 0}%`,
+                backgroundRepeat: 'no-repeat',
+              }}
+            />
+          ) : (
           <video
             ref={videoRef}
             src={card.object.video}
@@ -231,7 +285,8 @@ export function Card({
                 ? { filter: 'invert(1) contrast(2)', mixBlendMode: 'multiply' }
                 : undefined
             }
-          />
+            />
+          )}
         </div>
       ) : (
         <div className="p-4 h-full flex flex-col justify-between pointer-events-none select-none overflow-hidden rounded-md">
