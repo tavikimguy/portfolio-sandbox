@@ -143,9 +143,7 @@ export function FolderItemCard({
   return (
     <motion.div
       ref={itemRef}
-      className={`absolute rounded-lg border-2 bg-white shadow-md cursor-move select-none overflow-visible ${
-        isSelected ? 'border-blue-500' : 'border-gray-200'
-      }`}
+      className="absolute cursor-move select-none overflow-visible"
       initial={collapsed}
       animate={{ left: transform.x, top: transform.y, width: transform.width, height: transform.height, rotate: transform.rotation, opacity: 1 }}
       exit={collapsed}
@@ -157,34 +155,49 @@ export function FolderItemCard({
           wiggle), composing on top of the outer element's persistent
           position/size/rotation instead of fighting over the same values. */}
       <motion.div
-        className="w-full h-full flex flex-col overflow-hidden rounded-md pointer-events-none"
+        className="relative w-full h-full pointer-events-none"
         style={{ scale: bobbleScale, rotate: bobbleRotate }}
         onHoverStart={handleHoverStart}
       >
-        {item.kind !== 'text' && (
-          <div className="flex-1 min-h-0 bg-gray-100">
-            {item.kind === 'video' ? (
-              <video
-                src={item.src}
-                poster={item.poster}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="metadata"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <img src={item.src} alt={item.label} loading="lazy" draggable={false} className="w-full h-full object-cover" />
-            )}
-          </div>
-        )}
-        {/* Body copy is usually taller than the 130x96 an item starts at, so
-            the caption block scrolls — resize the item to read the whole
-            thing rather than truncating it here. */}
-        <div className={`shrink-0 overflow-auto px-1.5 py-1 ${item.kind === 'text' ? 'flex-1' : 'max-h-[45%]'}`}>
-          <span className="block text-[10px] font-medium text-gray-700 leading-tight">{item.label}</span>
-          {item.body && <p className="mt-1 text-[9px] text-gray-500 leading-snug">{item.body}</p>}
+        <div
+          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border-2 bg-white shadow-lg ${
+            isSelected ? 'border-blue-500' : 'border-gray-200'
+          }`}
+        >
+          {item.kind !== 'text' && (
+            <div className="flex-1 min-h-0 bg-gray-100">
+              {item.kind === 'video' ? (
+                <video
+                  src={item.src}
+                  poster={item.poster}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <img src={item.src} alt={item.label} loading="lazy" draggable={false} className="w-full h-full object-cover" />
+              )}
+            </div>
+          )}
+          {item.body && (
+            <div className={`shrink-0 overflow-hidden px-3 py-2 ${item.kind === 'text' ? 'flex-1' : 'max-h-[42%] border-t border-gray-100'}`}>
+              <p className="text-[11px] text-gray-600 leading-relaxed">{item.body}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Header rides just outside the card as its own pill — separate
+            from the asset, still visually attached to it. Lives outside the
+            rounded box (hence overflow-visible on the parent), so the
+            overlap solver in Canvas.tsx can't see it; PUSH_GAP there is
+            widened to leave it room. */}
+        <div className="absolute left-1/2 top-full -translate-x-1/2 mt-3 max-w-[115%] rounded-full bg-white shadow-md px-4 py-1.5">
+          <span className="block whitespace-nowrap overflow-hidden text-ellipsis text-[13px] font-medium text-gray-800">
+            {item.label}
+          </span>
         </div>
       </motion.div>
 

@@ -1,14 +1,111 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { AnimatePresence } from 'motion/react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { useCanvasStore, type CardTransform } from '@/stores/canvas';
 import { fetchAnnotations, createAnnotation } from '@/lib/api';
 import { PORTFOLIO_CARDS, CANVAS_WIDTH, CANVAS_HEIGHT } from '@/lib/portfolio-cards';
-import { clampPan, computeZoomStep } from '@/lib/canvas-bounds';
+import { clampPan, computeZoomStep, clampBoxToBoard } from '@/lib/canvas-bounds';
+import { usePointerVelocity } from '@/lib/usePointerVelocity';
 import { Card } from './Card';
+import { FolderItemCard } from './FolderItemCard';
 import { CodeWindowComponent } from './CodeWindow';
 import { DrawingCanvas } from './DrawingCanvas';
 import { CommentLayer } from './CommentLayer';
 import { Toolbar } from './Toolbar';
+
+// Items are a fixed size, shot out radially around a folder that itself
+// never resizes (the winner from workshopping three variants). Sized to
+// actually read the asset inside, not just hint at it.
+const ITEM_WIDTH = 300;
+const ITEM_HEIGHT = 260;
+
+// Three hand-tuned "feels," cycled across folders by index so the burst
+// isn't visually identical on every card — different radius, spring
+// weight, per-item stagger, and starting angle. Not per-card bespoke data,
+// just enough variety that browsing between folders doesn't feel robotic.
+const BURST_PRESETS = [
+  { radius: 460, spring: { type: 'spring', stiffness: 260, damping: 26, mass: 0.8 } as const, stagger: 0.035, angleOffset: -Math.PI / 2 },
+  { radius: 520, spring: { type: 'spring', stiffness: 400, damping: 24, mass: 0.6 } as const, stagger: 0.05, angleOffset: -Math.PI / 2 + 0.35 },
+  { radius: 420, spring: { type: 'spring', stiffness: 200, damping: 16, mass: 1 } as const, stagger: 0.02, angleOffset: -Math.PI / 2 - 0.35 },
+];
+
+function getBurstPreset(cardId: string) {
+  const index = PORTFOLIO_CARDS.findIndex((c) => c.id === cardId);
+  return BURST_PRESETS[Math.max(0, index) % BURST_PRESETS.length];
+}
+
+// Gap kept between any two cards once overlaps are resolved. Wide enough
+// to clear an item's label pill, which hangs below the item's own box (so
+// the overlap solver can't see it — see FolderItemCard.tsx).
+const PUSH_GAP = 56;
+// Passes over every card pair, nudging apart any that still overlap —
+// several folders can be expanded at once, so one burst can cascade into
+// more than just its immediate neighbor.
+const RESOLVE_ITERATIONS = 14;
+
+function childId(cardId: string, itemId: string) {
+  return `${cardId}::${itemId}`;
+}
+
+interface Box {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+function boxesOverlap(a: Box, b: Box) {
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+// Minimum-translation-vector push: the offset that moves `box` out along
+// whichever axis needs less travel to clear `blocker`, away from blocker's
+// center — cheap, deterministic AABB collision resolution. Rotation is
+// ignored (cards only rotate a little in practice, so the axis-aligned
+// approximation holds up).
+function pushOutOf(box: Box, blocker: Box) {
+  const overlapX = Math.min(box.x + box.width, blocker.x + blocker.width) - Math.max(box.x, blocker.x);
+  const overlapY = Math.min(box.y + box.height, blocker.y + blocker.height) - Math.max(box.y, blocker.y);
+
+  const boxCenterX = box.x + box.width / 2;
+  const boxCenterY = box.y + box.height / 2;
+  const blockerCenterX = blocker.x + blocker.width / 2;
+  const blockerCenterY = blocker.y + blocker.height / 2;
+
+  if (overlapX < overlapY) {
+    const dir = boxCenterX < blockerCenterX ? -1 : 1;
+    return { dx: dir * overlapX, dy: 0 };
+  }
+  const dir = boxCenterY < blockerCenterY ? -1 : 1;
+  return { dx: 0, dy: dir * overlapY };
+}
+
+// Settles every overlapping pair in `boxes` (mutated in place) by moving
+// BOTH members apart, split evenly — "they all push each other," not one
+// card evicting everyone else. Iterated a few times so a push that creates
+// a new overlap with a third card gets resolved too, not just the first hit.
+function resolveOverlaps(boxes: Map<string, Box>) {
+  const ids = Array.from(boxes.keys());
+  for (let iter = 0; iter < RESOLVE_ITERATIONS; iter++) {
+    let movedAny = false;
+    for (let i = 0; i < ids.length; i++) {
+      for (let j = i + 1; j < ids.length; j++) {
+        const a = boxes.get(ids[i])!;
+        const b = boxes.get(ids[j])!;
+        const paddedB: Box = { x: b.x - PUSH_GAP, y: b.y - PUSH_GAP, width: b.width + PUSH_GAP * 2, height: b.height + PUSH_GAP * 2 };
+        if (!boxesOverlap(a, paddedB)) continue;
+
+        movedAny = true;
+        const { dx, dy } = pushOutOf(a, paddedB);
+        const aMoved = clampBoxToBoard(a.x + dx / 2, a.y + dy / 2, a.width, a.height);
+        const bMoved = clampBoxToBoard(b.x - dx / 2, b.y - dy / 2, b.width, b.height);
+        boxes.set(ids[i], { ...a, ...aMoved });
+        boxes.set(ids[j], { ...b, ...bMoved });
+      }
+    }
+    if (!movedAny) break;
+  }
+}
 
 export function Canvas() {
   const [queryClient] = useState(() => new QueryClient());
@@ -24,6 +121,13 @@ function CanvasInner() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDraggingCard, setIsDraggingCard] = useState(false);
   const dragStartRef = useRef<{ x: number; y: number; cardX: number; cardY: number } | null>(null);
+  // True for the instant after a real drag (pointer actually moved) ends —
+  // the click handler checks and clears it so releasing a drag doesn't also
+  // toggle the card it was just dragged from.
+  const justDraggedRef = useRef(false);
+  // Shared by every shot-out item's hover-bobble — see FolderItemCard.tsx
+  // for what it's used for.
+  const { vx, vy } = usePointerVelocity();
 
   const {
     zoom,
@@ -36,6 +140,8 @@ function CanvasInner() {
     updateCardTransform,
     selectedCardId,
     setSelectedCardId,
+    expandedCardIds,
+    toggleExpandedCard,
     selectedCodeWindowId,
     setSelectedCodeWindowId,
     activeTool,
@@ -190,11 +296,17 @@ function CanvasInner() {
       cardY: transform.y,
     };
 
+    // Only counts as a drag (and so should swallow the click that follows)
+    // once the pointer has actually moved a couple px — otherwise every
+    // plain click would get eaten as a "just dragged" no-op.
+    let moved = false;
+
     const handleMove = (moveEvent: PointerEvent) => {
       if (!dragStartRef.current) return;
 
       const deltaX = (moveEvent.clientX - dragStartRef.current.x) / zoom;
       const deltaY = (moveEvent.clientY - dragStartRef.current.y) / zoom;
+      if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) moved = true;
 
       updateCardTransform(cardId, {
         x: dragStartRef.current.cardX + deltaX,
@@ -205,12 +317,95 @@ function CanvasInner() {
     const handleEnd = () => {
       setIsDraggingCard(false);
       dragStartRef.current = null;
+      justDraggedRef.current = moved;
       document.removeEventListener('pointermove', handleMove);
       document.removeEventListener('pointerup', handleEnd);
     };
 
     document.addEventListener('pointermove', handleMove);
     document.addEventListener('pointerup', handleEnd);
+  };
+
+  // Toggle a folder's expanded state. The folder itself never resizes —
+  // opening it seeds a fresh burst position for each of its items (fanned
+  // out around its own center, using that folder's own preset radius/
+  // angle) and closing it just drops them from the render list. Every
+  // OTHER already-open folder's items keep their current position as-is
+  // (not reseeded) so they don't jump — the resolver only needs to nudge
+  // them clear of whatever just changed.
+  const handleToggleExpand = (targetId: string) => {
+    const card = PORTFOLIO_CARDS.find((c) => c.id === targetId);
+    if (!card) return;
+    const willExpand = !expandedCardIds.has(targetId);
+
+    const boxes = new Map<string, Box>();
+    PORTFOLIO_CARDS.forEach((c) => {
+      const t = cardTransforms.get(c.id);
+      if (t) boxes.set(c.id, { x: t.x, y: t.y, width: t.width, height: t.height });
+    });
+    const childIds = new Set<string>();
+    expandedCardIds.forEach((openId) => {
+      if (openId === targetId) return; // this one's being reseeded below (if opening) or dropped (if closing)
+      const openCard = PORTFOLIO_CARDS.find((c) => c.id === openId);
+      openCard?.items?.forEach((item) => {
+        const id = childId(openId, item.id);
+        const t = cardTransforms.get(id);
+        if (t) {
+          boxes.set(id, { x: t.x, y: t.y, width: t.width, height: t.height });
+          childIds.add(id);
+        }
+      });
+    });
+
+    const targetTransform = cardTransforms.get(targetId);
+    const items = card.items ?? [];
+
+    if (willExpand && targetTransform && items.length > 0) {
+      const preset = getBurstPreset(targetId);
+      const centerX = targetTransform.x + targetTransform.width / 2;
+      const centerY = targetTransform.y + targetTransform.height / 2;
+      const n = items.length;
+      items.forEach((item, i) => {
+        const id = childId(targetId, item.id);
+        const angle = (i / n) * Math.PI * 2 + preset.angleOffset;
+        boxes.set(id, {
+          x: centerX + Math.cos(angle) * preset.radius - ITEM_WIDTH / 2,
+          y: centerY + Math.sin(angle) * preset.radius - ITEM_HEIGHT / 2,
+          width: ITEM_WIDTH,
+          height: ITEM_HEIGHT,
+        });
+        childIds.add(id);
+      });
+    }
+
+    resolveOverlaps(boxes);
+    // Items don't rotate and get their own fixed stacking order — folder
+    // cards keep whatever rotation/zIndex they already have (a user may
+    // have rotated one by hand), so only child ids get those defaulted.
+    boxes.forEach((box, id) => {
+      updateCardTransform(id, childIds.has(id) ? { ...box, rotation: 0, zIndex: 5 } : box);
+    });
+
+    toggleExpandedCard(targetId);
+  };
+
+  // Item drag reuses handleCardDragStart as-is below (it doesn't care
+  // whether the id is a folder or an item) — this is resize/rotate's
+  // equivalent, a thin wrapper so item components don't need direct access
+  // to the store action.
+  const handleItemResize = (id: string) => (patch: Partial<CardTransform>) => {
+    updateCardTransform(id, patch);
+  };
+
+  // Single click toggles a card open/closed (unless it was actually a drag
+  // release) — wired as the same onSelect prop Card already had.
+  const handleCardClick = (cardId: string) => () => {
+    if (justDraggedRef.current) {
+      justDraggedRef.current = false;
+      return;
+    }
+    setSelectedCardId(cardId);
+    handleToggleExpand(cardId);
   };
 
   return (
@@ -278,12 +473,53 @@ function CanvasInner() {
               key={card.id}
               card={card}
               isSelected={selectedCardId === card.id}
-              onSelect={() => setSelectedCardId(card.id)}
+              isExpanded={expandedCardIds.has(card.id)}
+              isDragging={isDraggingCard && selectedCardId === card.id}
+              onSelect={handleCardClick(card.id)}
               onDragStart={handleCardDragStart(card.id)}
               transform={transform}
             />
           );
         })}
+
+        {/* Items shot out of expanded folders — a separate layer from the
+            folder cards themselves, so AnimatePresence can play each
+            item's exit (collapse back into its folder) when it's removed
+            from this list on close. Draggable/resizable exactly like the
+            folder cards, via the same generic handlers. */}
+        <AnimatePresence>
+          {PORTFOLIO_CARDS.flatMap((card) => {
+            if (!expandedCardIds.has(card.id) || !card.items) return [];
+            const parentTransform = cardTransforms.get(card.id);
+            if (!parentTransform) return [];
+
+            const preset = getBurstPreset(card.id);
+            const origin = {
+              x: parentTransform.x + parentTransform.width / 2,
+              y: parentTransform.y + parentTransform.height / 2,
+            };
+            return card.items.map((item, i) => {
+              const id = childId(card.id, item.id);
+              const transform = cardTransforms.get(id);
+              if (!transform) return null;
+              return (
+                <FolderItemCard
+                  key={id}
+                  item={item}
+                  transform={transform}
+                  origin={origin}
+                  isSelected={selectedCardId === id}
+                  isDragging={isDraggingCard && selectedCardId === id}
+                  onDragStart={handleCardDragStart(id)}
+                  onResize={handleItemResize(id)}
+                  vx={vx}
+                  vy={vy}
+                  transition={{ ...preset.spring, delay: i * preset.stagger }}
+                />
+              );
+            });
+          })}
+        </AnimatePresence>
 
         {/* Code Windows */}
         {codeWindows.map((win) => (
