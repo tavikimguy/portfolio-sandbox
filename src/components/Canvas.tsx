@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import { useCanvasStore, type CardTransform } from '@/stores/canvas';
 import { fetchAnnotations, createAnnotation } from '@/lib/api';
 import { PORTFOLIO_CARDS, CANVAS_WIDTH, CANVAS_HEIGHT, type FolderItem } from '@/lib/portfolio-cards';
-import { clampPan, clampZoom, computeZoomStep, clampBoxToBoard } from '@/lib/canvas-bounds';
+import { clampZoom, computeZoomStep, clampBoxToBoard } from '@/lib/canvas-bounds';
 import { usePointerVelocity } from '@/lib/usePointerVelocity';
 import { Card } from './Card';
 import { FolderItemCard } from './FolderItemCard';
@@ -262,28 +262,6 @@ function CanvasInner() {
   useEffect(() => {
     latestRef.current = { activeTool, eraserSize };
   });
-
-  // On first load, center the viewport on the actual card cluster rather
-  // than leaving it at the board's (0,0) origin — the board is much
-  // larger than the content that lives in it, so starting at the origin
-  // just shows an empty top-left corner with everything off to one side.
-  useEffect(() => {
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    PORTFOLIO_CARDS.forEach((c) => {
-      minX = Math.min(minX, c.x);
-      minY = Math.min(minY, c.y);
-      maxX = Math.max(maxX, c.x + c.width);
-      maxY = Math.max(maxY, c.y + c.height);
-    });
-    const contentCenterX = (minX + maxX) / 2;
-    const contentCenterY = (minY + maxY) / 2;
-    setPan(
-      clampPan(window.innerWidth / 2 - contentCenterX, window.innerHeight / 2 - contentCenterY, 1)
-    );
-    // Intentionally once on mount — this is initial framing, not something
-    // that should re-run as the user pans/zooms/adds content afterward.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Handle wheel: Ctrl/Cmd+scroll zooms (matches the browser/Figma
   // convention) or resizes the eraser when it's active, plain scroll pans
