@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import { useCanvasStore, type CardTransform } from '@/stores/canvas';
 import { fetchAnnotations, createAnnotation } from '@/lib/api';
 import { PORTFOLIO_CARDS, CANVAS_WIDTH, CANVAS_HEIGHT, type FolderItem } from '@/lib/portfolio-cards';
-import { clampPan, computeZoomStep, clampBoxToBoard } from '@/lib/canvas-bounds';
+import { clampPan, clampZoom, computeZoomStep, clampBoxToBoard } from '@/lib/canvas-bounds';
 import { usePointerVelocity } from '@/lib/usePointerVelocity';
 import { Card } from './Card';
 import { FolderItemCard } from './FolderItemCard';
@@ -177,20 +177,30 @@ function CanvasInner() {
   const pendingIdsRef = useRef<Set<string>>(new Set());
   const syncedIdsRef = useRef<Set<string>>(new Set());
 
-  // Open on the work. The cards sit in the middle of a 5760x4320 board, so
-  // without this the view starts at the board's top-left corner staring at
-  // empty grid. Mount only — after this the user's own pan stands.
+  // Open with every card on screen. The cluster sits in the middle of a
+  // 5760x4320 board, so without this the view starts in the board's
+  // top-left corner staring at empty grid — and a fixed zoom can't promise
+  // the whole cluster fits, since that depends on the window. Fit the
+  // cards' bounding box to the viewport instead, then centre on it. Mount
+  // only: after this the user's own pan/zoom stands.
   useEffect(() => {
     const left = Math.min(...PORTFOLIO_CARDS.map((c) => c.x));
     const right = Math.max(...PORTFOLIO_CARDS.map((c) => c.x + c.width));
     const top = Math.min(...PORTFOLIO_CARDS.map((c) => c.y));
     const bottom = Math.max(...PORTFOLIO_CARDS.map((c) => c.y + c.height));
-    const z = useCanvasStore.getState().zoom;
+
+    // Breathing room around the cluster so cards don't sit flush against
+    // the window edge.
+    const MARGIN = 140;
+    const zoom = clampZoom(
+      Math.min(window.innerWidth / (right - left + MARGIN * 2), window.innerHeight / (bottom - top + MARGIN * 2))
+    );
+    setZoom(zoom);
     setPan({
-      x: window.innerWidth / 2 - ((left + right) / 2) * z,
-      y: window.innerHeight / 2 - ((top + bottom) / 2) * z,
+      x: window.innerWidth / 2 - ((left + right) / 2) * zoom,
+      y: window.innerHeight / 2 - ((top + bottom) / 2) * zoom,
     });
-  }, [setPan]);
+  }, [setZoom, setPan]);
 
   useEffect(() => {
     if (!fetchedAnnotations) return;

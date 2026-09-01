@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useCanvasStore } from '@/stores/canvas';
 import { motion } from 'motion/react';
 import { nanoid } from 'nanoid';
+import { deleteAnnotation } from '@/lib/api';
 
 interface CommentLayerProps {
   canvasWidth: number;
@@ -116,7 +117,13 @@ export function CommentLayer({
               {new Date(comment.timestamp).toLocaleTimeString()}
             </p>
             <button
-              onClick={() => removeAnnotation(comment.id)}
+              onClick={() => {
+                removeAnnotation(comment.id);
+                // removeAnnotation only touches the local store. Without this
+                // the row survives in D1 and the next page load fetches the
+                // comment straight back.
+                deleteAnnotation(comment.id);
+              }}
               className="opacity-0 group-hover:opacity-100 absolute top-1 right-1 text-gray-500 hover:text-red-500 text-xs font-bold"
             >
               ✕
