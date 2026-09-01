@@ -359,10 +359,14 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
     // The rotating 3D monogram that stood for this project on the Framer
     // site. Cropped tight to the logo's own travel across the animation, so
     // it sits as an object rather than inside a 16:9 letterbox.
+    // Shown exactly as authored, dark ground included. The mark uses black
+    // AND white as design elements — black-filled W with white top faces, a
+    // white slab, black C with white edges — so the ground can't be keyed
+    // out without erasing half the logo, and inverting it flips the whole
+    // thing. It reads as a dark object on the light board.
     object: {
       still: '/assets/wfoc/logo-object-still.png',
       video: '/assets/wfoc/logo-object.mp4',
-      invertForLightBoard: true,
     },
     items: [
       {

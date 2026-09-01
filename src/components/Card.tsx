@@ -207,7 +207,7 @@ export function Card({
         // Just the clip, never swapped out: the still is only its poster, so
         // leaving the card pauses the rotation wherever it got to instead of
         // snapping back to the start.
-        <div className="relative h-full w-full pointer-events-none select-none">
+        <div className="relative h-full w-full overflow-hidden rounded-xl pointer-events-none select-none">
           <video
             ref={videoRef}
             src={card.object.video}
@@ -217,15 +217,15 @@ export function Card({
             playsInline
             preload="auto"
             className="h-full w-full object-contain"
+            // Only for light-on-dark artwork that should drop its ground.
             // Inline rather than Tailwind utilities because the contrast has
-            // to compose with the invert in one filter chain, in order.
-            //
-            // contrast(2) is load-bearing: the clip's ground is clamped to
-            // pure black before encoding, but x264 is lossy and puts noise
-            // back (~20% of pixels land in luma 1-25). Inverted, that noise
+            // to compose with the invert in one filter chain, in order — and
+            // the contrast is load-bearing: a clip's ground can be clamped to
+            // black before encoding, but x264 is lossy and puts noise back
+            // (~20% of pixels land in luma 1-25). Inverted, that noise
             // becomes off-white specks that multiply into the board as a
-            // faint dotted rectangle. Crushing contrast after the invert
-            // forces them to pure white, which multiply then discards.
+            // faint dotted rectangle; crushing contrast after the invert
+            // forces them to pure white, which multiply discards.
             style={
               card.object.invertForLightBoard
                 ? { filter: 'invert(1) contrast(2)', mixBlendMode: 'multiply' }
