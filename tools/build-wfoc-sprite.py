@@ -31,7 +31,7 @@ CELL_W, CELL_H = 320, 328
 ORANGE = (255, 96, 64)   # #ff6040, from the project's own palette slide
 INK = (20, 20, 20)
 WHITE_THRESH = 110
-GROW, PASSES = 9, 4
+GROW, PASSES = 9, 8
 
 
 def silhouette(im):
@@ -97,7 +97,7 @@ for i, path in enumerate(frames):
     coverage.append(sum(1 for v in a.getdata() if v > 128) / (a.size[0] * a.size[1]))
     cell = duotone(im, a).resize((CELL_W, CELL_H), Image.LANCZOS)
     sheet.paste(cell, ((i % COLS) * CELL_W, (i // COLS) * CELL_H))
-    if i in (0, 17, 34):
+    if i in (0, 12, 25, 37):
         Image.alpha_composite(Image.new('RGBA', cell.size, (255, 255, 255, 255)), cell).convert('RGB').save(
             f'{CHECK}/final_cell{i}.png'
         )
