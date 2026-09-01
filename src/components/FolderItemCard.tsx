@@ -69,6 +69,7 @@ export function FolderItemCard({
   // directly by hand, so position/size/rotation should track the cursor
   // exactly rather than ease through the burst spring.
   const [isInteracting, setIsInteracting] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const isTransforming = isDragging || isInteracting;
 
   // Local, imperatively-driven bobble wiggle — lives on an INNER wrapper,
@@ -174,17 +175,23 @@ export function FolderItemCard({
       animate={{ left: transform.x, top: transform.y, width: transform.width, height: transform.height, rotate: transform.rotation, opacity: 1 }}
       exit={collapsed}
       transition={isTransforming ? { duration: 0 } : transition}
-      style={{ zIndex: 5 }}
+      // Lifted while hovered so this item's caption panel isn't covered by
+      // whichever neighbour happens to render after it.
+      style={{ zIndex: hovered ? 20 : 5 }}
       onPointerDown={onDragStart}
+      // Hover lives out here, not on the wrapper below: that one is
+      // pointer-events-none so it never swallows a drag, which also means
+      // it never receives hover.
+      onHoverStart={() => {
+        setHovered(true);
+        handleHoverStart();
+      }}
+      onHoverEnd={() => setHovered(false)}
     >
       {/* Inner wrapper carries only the transient hover bobble (scale +
           wiggle), composing on top of the outer element's persistent
           position/size/rotation instead of fighting over the same values. */}
-      <motion.div
-        className="relative w-full h-full pointer-events-none"
-        style={{ scale: bobbleScale, rotate: bobbleRotate }}
-        onHoverStart={handleHoverStart}
-      >
+      <motion.div className="relative w-full h-full pointer-events-none" style={{ scale: bobbleScale, rotate: bobbleRotate }}>
         <div
           className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border-2 bg-white shadow-lg ${
             isSelected ? 'border-blue-500' : 'border-gray-200'
@@ -239,6 +246,20 @@ export function FolderItemCard({
             {item.label}
           </span>
         </div>
+
+        {/* Copy about this specific asset — it opens under the label on
+            hover rather than living on the board as its own module, so the
+            visual it describes is the thing you go to. Absolutely
+            positioned, so revealing it never reflows the item. */}
+        {item.caption && (
+          <div
+            className={`absolute left-1/2 top-full -translate-x-1/2 mt-14 w-[125%] rounded-2xl bg-white shadow-lg px-4 py-3 transition-opacity duration-150 ${
+              hovered ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <p className="text-[11px] text-gray-600 leading-relaxed">{item.caption}</p>
+          </div>
+        )}
       </motion.div>
 
       {isSelected && (

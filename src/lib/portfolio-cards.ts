@@ -20,18 +20,20 @@ export interface FolderItem {
   id: string;
   label: string;
   kind: FolderItemKind;
-  // An item is EITHER an asset or its prose, never both on one card — a
-  // note that belongs to an asset sits next to it in this array so the
-  // burst drops the two side by side.
-  //
   // Public path under /assets for image/video items. Every file is mirrored
   // from tavi.kim — see public/assets/manifest.json for the source URL,
   // dimensions and which route each one came off.
   src?: string;
   // Still frame for a video item, used as its <video poster>.
   poster?: string;
-  // Body copy, verbatim from tavi.kim. Text items only.
+  // A `text` item's whole body. Reserved for copy that describes the
+  // PROJECT — the role, the brief, the goal, the takeaway. Copy about one
+  // particular visual belongs on that visual as a `caption` instead of
+  // taking up the canvas as a module of its own.
   body?: string;
+  // Copy describing THIS asset, revealed on hover rather than sitting out
+  // on the board — see FolderItemCard.tsx.
+  caption?: string;
   // Burst size, fitted to the asset's real aspect ratio inside a 280px
   // box so nothing gets letterboxed or cropped on the way out. Canvas.tsx
   // falls back to TEXT_ITEM_* when these are absent.
@@ -70,26 +72,35 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         body: 'How can we remedy the gripes of the reselling community and create an intuitive database/inventory management platform that provides relevant insights into performance and trends through a more engaging interface.',
       },
       {
-        id: 'research-note',
+        id: 'user-insight',
         label: 'Research',
-        kind: 'text',
-        body: 'To gain a deeper understanding of the user base and competitor market, I conducted a thorough analysis. Being a former user of many of these platforms and a dedicated reseller myself I had an idea of where to look an a network of suitable subjects to research/survey.',
+        kind: 'image',
+        src: '/assets/pieces/user-insight.png',
+        caption:
+          'To gain a deeper understanding of the user base and competitor market, I conducted a thorough analysis. Being a former user of many of these platforms and a dedicated reseller myself I had an idea of where to look an a network of suitable subjects to research/survey.',
+        width: 280,
+        height: 158,
       },
-      { id: 'user-insight', label: 'User Insight', kind: 'image', src: '/assets/pieces/user-insight.png', width: 280, height: 158 },
       {
-        id: 'wireframe-note',
+        id: 'wireframes',
         label: 'Wireframing',
-        kind: 'text',
-        body: 'I pulled a lot of my inspiration for my wireframes from existing platforms, are.na, and behance. I tried my best to keep things light while maintaining a structure and flow that I could easily modify as I discovered holes in my design framework.',
+        kind: 'image',
+        src: '/assets/pieces/wireframes.png',
+        caption:
+          'I pulled a lot of my inspiration for my wireframes from existing platforms, are.na, and behance. I tried my best to keep things light while maintaining a structure and flow that I could easily modify as I discovered holes in my design framework.',
+        width: 280,
+        height: 158,
       },
-      { id: 'wireframes', label: 'Wireframes', kind: 'image', src: '/assets/pieces/wireframes.png', width: 280, height: 158 },
       {
-        id: 'hifi-note',
+        id: 'hifi-designs',
         label: 'Hi-Fidelity Designs',
-        kind: 'text',
-        body: 'After multiple iterations and critique, the final designs for mobile and web were established. These designs featured sleek and easily distinguishable elements for interactive sections as well as informational components to help users better onboard and understand the platform I created.',
+        kind: 'image',
+        src: '/assets/pieces/hifi-designs.png',
+        caption:
+          'After multiple iterations and critique, the final designs for mobile and web were established. These designs featured sleek and easily distinguishable elements for interactive sections as well as informational components to help users better onboard and understand the platform I created.',
+        width: 280,
+        height: 158,
       },
-      { id: 'hifi-designs', label: 'Hi-Fi Designs', kind: 'image', src: '/assets/pieces/hifi-designs.png', width: 280, height: 158 },
       {
         id: 'app-mockup',
         label: 'Listing + Inventory',
@@ -130,12 +141,15 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         body: 'In my role, I owned the design for growth initiatives. As one of two designers on the growth team, I focused on visual design, data-driven projects, and motion design for special projects. I worked end-to-end shipping web work from concept to production, architecting CMS collections, building pages, and optimizing conversion across mobile and desktop.',
       },
       {
-        id: 'motion-note',
+        id: 'motion-ehr',
         label: 'Motion Design',
-        kind: 'text',
-        body: 'One of my main responsibilities at Blueprint is creating seamless motion graphics for ad delivery, social media, and onboarding.',
+        kind: 'video',
+        src: '/assets/blueprint/ehr-workflow-promo.mp4',
+        caption:
+          'One of my main responsibilities at Blueprint is creating seamless motion graphics for ad delivery, social media, and onboarding.',
+        width: 280,
+        height: 280,
       },
-      { id: 'motion-ehr', label: 'EHR Workflow', kind: 'video', src: '/assets/blueprint/ehr-workflow-promo.mp4', width: 280, height: 280 },
       {
         id: 'motion-soap',
         label: 'SOAP Transcription',
@@ -144,14 +158,24 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         width: 280,
         height: 280,
       },
-      { id: 'motion-copy-note', label: 'Copy Note to EHR', kind: 'video', src: '/assets/blueprint/copy-note-to-ehr.mp4', width: 280, height: 158 },
       {
-        id: 'ui-note',
-        label: 'UI Design',
-        kind: 'text',
-        body: 'I work closely with other members of the design team to build clean UI layouts and collateral that converts. My biggest projects were the design of our web magazine "The Golden Thread" and our therapists community "Between Sessions." These two endeavors are Blueprint\'s largest organic funnels and have helped convert hundreds of customers.',
+        id: 'motion-copy-note',
+        label: 'Copy Note to EHR',
+        kind: 'video',
+        src: '/assets/blueprint/copy-note-to-ehr.mp4',
+        width: 280,
+        height: 158,
       },
-      { id: 'golden-thread', label: 'The Golden Thread', kind: 'image', src: '/assets/blueprint/golden-thread-blog.png', width: 280, height: 175 },
+      {
+        id: 'golden-thread',
+        label: 'The Golden Thread',
+        kind: 'image',
+        src: '/assets/blueprint/golden-thread-blog.png',
+        caption:
+          'I work closely with other members of the design team to build clean UI layouts and collateral that converts. My biggest projects were the design of our web magazine "The Golden Thread" and our therapists community "Between Sessions." These two endeavors are Blueprint\'s largest organic funnels and have helped convert hundreds of customers.',
+        width: 280,
+        height: 175,
+      },
       {
         id: 'between-sessions',
         label: 'Between Sessions',
@@ -160,14 +184,24 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         width: 280,
         height: 175,
       },
-      { id: 'session-prep', label: 'Session Prep', kind: 'image', src: '/assets/home/blueprint-session-prep.png', width: 280, height: 175 },
       {
-        id: 'social-note',
-        label: 'Social and Paid Delivery',
-        kind: 'text',
-        body: 'My last responsibility at Blueprint is creating all of our social and ad assets. These are delivered twice a week on the social end. These assets vary in nature depending on the content and copy provided, ranging from static posts to dynamic video content.',
+        id: 'session-prep',
+        label: 'Session Prep',
+        kind: 'image',
+        src: '/assets/home/blueprint-session-prep.png',
+        width: 280,
+        height: 175,
       },
-      { id: 'social', label: 'Social Deliverables', kind: 'image', src: '/assets/blueprint/social-deliverables.png', width: 280, height: 158 },
+      {
+        id: 'social',
+        label: 'Social and Paid Delivery',
+        kind: 'image',
+        src: '/assets/blueprint/social-deliverables.png',
+        caption:
+          'My last responsibility at Blueprint is creating all of our social and ad assets. These are delivered twice a week on the social end. These assets vary in nature depending on the content and copy provided, ranging from static posts to dynamic video content.',
+        width: 280,
+        height: 158,
+      },
       {
         id: 'ocean',
         label: 'Background Footage',
@@ -209,44 +243,76 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         body: 'How can we design a delightful user expereince, cohesive brand identity, and social strategy that is both flexible and simple for an aged audience and growing younger userbase.',
       },
       {
-        id: 'process-note',
-        label: 'Research and Analysis',
-        kind: 'text',
-        body: 'To begin the creation of our product we began by analyzing two categories of competing product: existing solutions and the current pipeline without the solution. Collecting data from over 400 responses while simultaneously onboarding users onto a beta version of the product to collect further data downstream.',
-      },
-      {
         id: 'process',
         label: 'The Reselling Process',
         kind: 'image',
         src: '/assets/flipkit/reselling-process-diagram.png',
+        caption:
+          'To begin the creation of our product we began by analyzing two categories of competing product: existing solutions and the current pipeline without the solution. Collecting data from over 400 responses while simultaneously onboarding users onto a beta version of the product to collect further data downstream.',
         width: 280,
         height: 158,
       },
       {
-        id: 'findings-note',
-        label: 'Main Findings',
-        kind: 'text',
-        body: 'My goal was to inform decisions regarding flow, key features, and points of friction. Here are my main findings:',
+        id: 'user-research',
+        label: 'Research and Analysis',
+        kind: 'image',
+        src: '/assets/flipkit/user-research.png',
+        caption: 'My goal was to inform decisions regarding flow, key features, and points of friction. Here are my main findings:',
+        width: 280,
+        height: 158,
       },
-      { id: 'user-research', label: 'User Research', kind: 'image', src: '/assets/flipkit/user-research.png', width: 280, height: 158 },
-      { id: 'problems', label: 'Problems', kind: 'image', src: '/assets/flipkit/problems.png', width: 280, height: 158 },
       {
-        id: 'flow-note',
+        id: 'problems',
+        label: 'Problems',
+        kind: 'image',
+        src: '/assets/flipkit/problems.png',
+        width: 280,
+        height: 158,
+      },
+      {
+        id: 'user-flow',
         label: 'User Flow',
-        kind: 'text',
-        body: 'To organize my thoughts before I began wireframing and creating our first mockups, I created a suitable userflow that would describe the actions of the user and help us decide which parts of the product to build first. I centered the design around a comprehensive dashboard that would display high level information at a glance.',
+        kind: 'image',
+        src: '/assets/flipkit/user-flow-map.png',
+        caption:
+          'To organize my thoughts before I began wireframing and creating our first mockups, I created a suitable userflow that would describe the actions of the user and help us decide which parts of the product to build first. I centered the design around a comprehensive dashboard that would display high level information at a glance.',
+        width: 280,
+        height: 158,
       },
-      { id: 'user-flow', label: 'User Flow Map', kind: 'image', src: '/assets/flipkit/user-flow-map.png', width: 280, height: 158 },
-      { id: 'lofi', label: 'Early Ideation and Lo-Fi', kind: 'image', src: '/assets/flipkit/lofi-designs.png', width: 280, height: 158 },
       {
-        id: 'delivery-note',
-        label: 'Delivery and Launch',
-        kind: 'text',
-        body: 'After numerous iterations, the hi-fidelity designs were completed and shipped off to development. From this point onwards, all design changes were made directly via html injections and edits.',
+        id: 'lofi',
+        label: 'Early Ideation and Lo-Fi',
+        kind: 'image',
+        src: '/assets/flipkit/lofi-designs.png',
+        width: 280,
+        height: 158,
       },
-      { id: 'dashboard', label: 'Dashboard', kind: 'image', src: '/assets/flipkit/dashboard-home.png', width: 280, height: 151 },
-      { id: 'app-screens', label: 'App Screens', kind: 'video', src: '/assets/home/flipkit-app-screens.mp4', width: 280, height: 158 },
-      { id: 'web-dashboard', label: 'Web Dashboard', kind: 'video', src: '/assets/home/flipkit-web-dashboard.mp4', width: 280, height: 280 },
+      {
+        id: 'dashboard',
+        label: 'Delivery and Launch',
+        kind: 'image',
+        src: '/assets/flipkit/dashboard-home.png',
+        caption:
+          'After numerous iterations, the hi-fidelity designs were completed and shipped off to development. From this point onwards, all design changes were made directly via html injections and edits.',
+        width: 280,
+        height: 151,
+      },
+      {
+        id: 'app-screens',
+        label: 'App Screens',
+        kind: 'video',
+        src: '/assets/home/flipkit-app-screens.mp4',
+        width: 280,
+        height: 158,
+      },
+      {
+        id: 'web-dashboard',
+        label: 'Web Dashboard',
+        kind: 'video',
+        src: '/assets/home/flipkit-web-dashboard.mp4',
+        width: 280,
+        height: 280,
+      },
       {
         id: 'brand',
         label: 'Brand and Community',
@@ -279,43 +345,69 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         body: 'As a freelance graphic designer I was tasked with redesigning the brand identity of the conference and breathing new life into their outdated design system. The final deliverables included a new palette, typeface, logo, social assets, and physical merchandise.',
       },
       {
-        id: 'logo-note',
+        id: 'logo-3d',
         label: 'The Logo',
-        kind: 'text',
-        body: 'For the logo I took two approaches. The first approach took elements from urban planning such as housing infrastructure, building heatmaps, and weather maps to guide my thinking. The client asked for a 3D option that would be appropriate as a .gif for their website and social deliverables.',
+        kind: 'image',
+        src: '/assets/wfoc/logo-3d-variations.png',
+        caption:
+          'For the logo I took two approaches. The first approach took elements from urban planning such as housing infrastructure, building heatmaps, and weather maps to guide my thinking. The client asked for a 3D option that would be appropriate as a .gif for their website and social deliverables.',
+        width: 280,
+        height: 158,
       },
-      { id: 'logo-3d', label: '3D Logo Variations', kind: 'image', src: '/assets/wfoc/logo-3d-variations.png', width: 280, height: 158 },
-      { id: 'logo-animation', label: 'Logo Animation', kind: 'video', src: '/assets/shared/wfoc-logo-animation.mp4', width: 280, height: 158 },
       {
-        id: 'mark-note',
-        label: 'The Flat Mark',
-        kind: 'text',
-        body: 'The second logo was at the special request of the client for a Scandinavian inspired flat mark. For this approach I once again explored symbols from urban planning such as traffic signs and crosswalks to create a system of symbols that could be used to form the conference title.',
+        id: 'logo-animation',
+        label: 'Logo Animation',
+        kind: 'video',
+        src: '/assets/shared/wfoc-logo-animation.mp4',
+        width: 280,
+        height: 158,
       },
-      { id: 'logo-mark', label: 'Logo Mark', kind: 'image', src: '/assets/wfoc/logo-mark.png', width: 280, height: 158 },
       {
-        id: 'type-note',
-        label: 'Typeface and Palette',
-        kind: 'text',
-        body: 'The palette was designed to be mostly neutral colors for visibility and softness, while conveying the major themes: technology (purple), nature (green), humanity (blue), and infrastructure (orange). For the typeface the most important consideration was that it be highly legible and simple — Neue Haas Grotesk by Christian Schwartz fit this criteria perfectly.',
+        id: 'logo-mark',
+        label: 'Logo Mark',
+        kind: 'image',
+        src: '/assets/wfoc/logo-mark.png',
+        caption:
+          'The second logo was at the special request of the client for a Scandinavian inspired flat mark. For this approach I once again explored symbols from urban planning such as traffic signs and crosswalks to create a system of symbols that could be used to form the conference title.',
+        width: 280,
+        height: 158,
       },
       {
         id: 'typeface-palette',
         label: 'Typeface + Palette',
         kind: 'image',
         src: '/assets/wfoc/typeface-and-palette.png',
+        caption:
+          'The palette was designed to be mostly neutral colors for visibility and softness, while conveying the major themes: technology (purple), nature (green), humanity (blue), and infrastructure (orange). For the typeface the most important consideration was that it be highly legible and simple — Neue Haas Grotesk by Christian Schwartz fit this criteria perfectly.',
         width: 280,
         height: 158,
       },
       {
-        id: 'merch-note',
-        label: 'Merchandise and Advertising',
-        kind: 'text',
-        body: 'With the two logos built out and approved, the next step was to create marketing materials for the conference. I created a system of templates that could easily be edited and contain the proper branding elements to subtly reference the brand system I created.',
+        id: 'merchandise',
+        label: 'Merchandise',
+        kind: 'image',
+        src: '/assets/wfoc/merchandise.png',
+        caption:
+          'With the two logos built out and approved, the next step was to create marketing materials for the conference. I created a system of templates that could easily be edited and contain the proper branding elements to subtly reference the brand system I created.',
+        width: 280,
+        height: 158,
       },
-      { id: 'merchandise', label: 'Merchandise', kind: 'image', src: '/assets/wfoc/merchandise.png', width: 280, height: 158 },
-      { id: 'print-posters', label: 'Print Posters', kind: 'image', src: '/assets/wfoc/print-posters.png', width: 280, height: 158 },
-      { id: 'social', label: 'Social Deliverables', kind: 'image', src: '/assets/wfoc/social-deliverables.png', width: 280, height: 158 },
+      {
+        id: 'print-posters',
+        label: 'Print Posters',
+        kind: 'image',
+        src: '/assets/wfoc/print-posters.png',
+        width: 280,
+        height: 158,
+      },
+      {
+        id: 'social',
+        label: 'Social Deliverables',
+        kind: 'image',
+        src: '/assets/wfoc/social-deliverables.png',
+        width: 280,
+        height: 158,
+      },
       {
         id: 'ocean',
         label: 'Background Footage',
@@ -342,8 +434,15 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
     bgColor: 'bg-orange-50',
     link: 'https://www.tavi.kim/',
     items: [
-      { id: 'truck', label: 'Don Memo', kind: 'image', src: '/assets/home/photo-food-truck.jpg', width: 280, height: 210 },
-      { id: 'note', label: 'Don Memo', kind: 'text', body: 'Rebranding my favorite campus food truck.' },
+      {
+        id: 'truck',
+        label: 'Don Memo',
+        kind: 'image',
+        src: '/assets/home/photo-food-truck.jpg',
+        caption: 'Rebranding my favorite campus food truck.',
+        width: 280,
+        height: 210,
+      },
     ],
   },
   {
@@ -407,26 +506,25 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         body: 'Redesign the home page of a portfolio management app to create a user-centric and visually appealing experience. Key elements: portfolio overview (total value, percentage change, allocation by asset class), a recent activity section, call-to-action buttons, and personalization for data-driven users seeking actionable insights at a glance.',
       },
       {
-        id: 'ideation-note',
-        label: 'Ideation and Wireframing',
-        kind: 'text',
-        body: 'With time in mind, I made very rough wireframes of my initial idea and gathered some inspiration from my are.na board. I designed with simplicity and a seamless userflow in mind. I opted towards a modular design aesthetic that would make adding new features and sections easy.',
-      },
-      {
         id: 'inspo',
-        label: 'Inspo + Wireframing',
+        label: 'Ideation and Wireframing',
         kind: 'image',
         src: '/assets/sprint/inspo-and-wireframing.png',
+        caption:
+          'With time in mind, I made very rough wireframes of my initial idea and gathered some inspiration from my are.na board. I designed with simplicity and a seamless userflow in mind. I opted towards a modular design aesthetic that would make adding new features and sections easy.',
         width: 280,
         height: 158,
       },
       {
-        id: 'hifi-note',
+        id: 'hifi-frames',
         label: 'Hi-Fidelity Designs',
-        kind: 'text',
-        body: 'After a few iterations and millions of edits (as many as my time limit would allow) I delivered the following hi fidelity wireframes to my professor.',
+        kind: 'image',
+        src: '/assets/sprint/hifi-frames.png',
+        caption:
+          'After a few iterations and millions of edits (as many as my time limit would allow) I delivered the following hi fidelity wireframes to my professor.',
+        width: 280,
+        height: 231,
       },
-      { id: 'hifi-frames', label: 'Hi-Fi Frames', kind: 'image', src: '/assets/sprint/hifi-frames.png', width: 280, height: 231 },
       { id: 'app-mockup', label: 'App Mockup', kind: 'image', src: '/assets/shared/sprint-app-mockup.png', width: 280, height: 202 },
       {
         id: 'writeup',
@@ -447,8 +545,15 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
     bgColor: 'bg-indigo-50',
     link: 'https://www.tavi.kim/',
     items: [
-      { id: 'cover', label: 'Slowly · 천천히', kind: 'image', src: '/assets/home/poster-slowly-cloud.png', width: 280, height: 198 },
-      { id: 'note', label: 'Slowly', kind: 'text', body: 'A zine made for my 24th birthday. Tavi Kim — New York, 2025.' },
+      {
+        id: 'cover',
+        label: 'Slowly · 천천히',
+        kind: 'image',
+        src: '/assets/home/poster-slowly-cloud.png',
+        caption: 'A zine made for my 24th birthday. Tavi Kim — New York, 2025.',
+        width: 280,
+        height: 198,
+      },
     ],
   },
 ];
