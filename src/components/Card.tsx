@@ -216,9 +216,21 @@ export function Card({
             loop
             playsInline
             preload="auto"
-            className={`h-full w-full object-contain ${
-              card.object.invertForLightBoard ? 'invert mix-blend-multiply' : ''
-            }`}
+            className="h-full w-full object-contain"
+            // Inline rather than Tailwind utilities because the contrast has
+            // to compose with the invert in one filter chain, in order.
+            //
+            // contrast(2) is load-bearing: the clip's ground is clamped to
+            // pure black before encoding, but x264 is lossy and puts noise
+            // back (~20% of pixels land in luma 1-25). Inverted, that noise
+            // becomes off-white specks that multiply into the board as a
+            // faint dotted rectangle. Crushing contrast after the invert
+            // forces them to pure white, which multiply then discards.
+            style={
+              card.object.invertForLightBoard
+                ? { filter: 'invert(1) contrast(2)', mixBlendMode: 'multiply' }
+                : undefined
+            }
           />
         </div>
       ) : (

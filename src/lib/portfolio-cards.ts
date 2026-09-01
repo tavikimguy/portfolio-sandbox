@@ -350,10 +350,10 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
     description: 'Building the brand for a city planning conference',
     x: 3470,
     y: 2010,
-    // Sized to the logo object's own 560x550 rather than the standard card
+    // Sized to the logo object's own 560x574 rather than the standard card
     // 320x200 — it's artwork now, not a panel, so it shouldn't be letterboxed.
-    width: 300,
-    height: 295,
+    width: 295,
+    height: 302,
     bgColor: 'bg-pink-50',
     link: 'https://www.tavi.kim/casestudy-wfoc',
     // The rotating 3D monogram that stood for this project on the Framer
