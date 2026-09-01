@@ -51,12 +51,10 @@ export function Card({
   // separate from `isDragging` (drag lives in Canvas.tsx) since resize/
   // rotate are driven entirely by this component's own pointer handlers.
   const [isInteracting, setIsInteracting] = useState(false);
-  // Object cards swap a still for a looping clip on hover; see handleHover.
-  const [isHovered, setIsHovered] = useState(false);
+  // Object cards play their clip on hover; see handleHover.
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleHover = (entering: boolean) => {
-    setIsHovered(entering);
     const video = videoRef.current;
     if (!video) return;
     if (entering) {
@@ -64,8 +62,9 @@ export function Card({
       // to recover from, the leave branch has already paused it.
       video.play().catch(() => {});
     } else {
+      // Pause only. Rewinding to 0 here is what made it snap back; holding
+      // the frame means the logo rests wherever you left it.
       video.pause();
-      video.currentTime = 0;
     }
   };
   // Any direct pointer manipulation should track the cursor exactly, with
@@ -205,28 +204,21 @@ export function Card({
           content. What's "inside" it shoots out as separate item cards
           (see Canvas.tsx) when isExpanded flips on. */}
       {card.object ? (
+        // Just the clip, never swapped out: the still is only its poster, so
+        // leaving the card pauses the rotation wherever it got to instead of
+        // snapping back to the start.
         <div className="relative h-full w-full pointer-events-none select-none">
-          {/* Still and clip are stacked and cross-faded rather than swapped,
-              so there's no blank frame while the video starts. Frame 0 of
-              the clip IS the still, so the two line up exactly. */}
-          <img
-            src={card.object.still}
-            alt={card.title}
-            draggable={false}
-            className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-200 ${
-              isHovered ? 'opacity-0' : 'opacity-100'
-            } ${card.object.invertForLightBoard ? 'invert mix-blend-multiply' : ''}`}
-          />
           <video
             ref={videoRef}
             src={card.object.video}
+            poster={card.object.still}
             muted
             loop
             playsInline
             preload="auto"
-            className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-200 ${
-              isHovered ? 'opacity-100' : 'opacity-0'
-            } ${card.object.invertForLightBoard ? 'invert mix-blend-multiply' : ''}`}
+            className={`h-full w-full object-contain ${
+              card.object.invertForLightBoard ? 'invert mix-blend-multiply' : ''
+            }`}
           />
         </div>
       ) : (
