@@ -230,9 +230,12 @@ export const useCanvasStore = create<CanvasState>()(
     // Pan/zoom — clamped here, at the single choke point every caller
     // (native wheel, a code window's forwarded wheel, anything future)
     // goes through, so nothing needs to remember to clamp itself.
-    zoom: 1,
+    // Opens zoomed out: at 1.0 a single card filled most of the viewport and
+    // its burst ran off screen. 0.55 puts most of the grid in view on load
+    // and leaves a burst comfortably inside the edges.
+    zoom: 0.55,
     setZoom: (zoom) => set({ zoom: clampZoom(zoom) }),
-    pan: { x: 0, y: 0 },
+    pan: { x: -100, y: -80 },
     setPan: (pan) => set({ pan: clampPan(pan.x, pan.y, get().zoom) }),
 
     // Annotations

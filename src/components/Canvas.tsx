@@ -18,8 +18,8 @@ import { Toolbar } from './Toolbar';
 // its own width/height, fitted to the asset's true aspect ratio, so a
 // 16:9 video and a square painting come out correctly proportioned rather
 // than cropped into one shared box. Text items have no asset to match.
-const TEXT_ITEM_WIDTH = 340;
-const TEXT_ITEM_HEIGHT = 300;
+const TEXT_ITEM_WIDTH = 260;
+const TEXT_ITEM_HEIGHT = 230;
 
 function itemSize(item: FolderItem) {
   return {
@@ -33,9 +33,9 @@ function itemSize(item: FolderItem) {
 // weight, per-item stagger, and starting angle. Not per-card bespoke data,
 // just enough variety that browsing between folders doesn't feel robotic.
 const BURST_PRESETS = [
-  { radius: 460, spring: { type: 'spring', stiffness: 260, damping: 26, mass: 0.8 } as const, stagger: 0.035, angleOffset: -Math.PI / 2 },
-  { radius: 520, spring: { type: 'spring', stiffness: 400, damping: 24, mass: 0.6 } as const, stagger: 0.05, angleOffset: -Math.PI / 2 + 0.35 },
-  { radius: 420, spring: { type: 'spring', stiffness: 200, damping: 16, mass: 1 } as const, stagger: 0.02, angleOffset: -Math.PI / 2 - 0.35 },
+  { radius: 300, spring: { type: 'spring', stiffness: 260, damping: 26, mass: 0.8 } as const, stagger: 0.035, angleOffset: -Math.PI / 2 },
+  { radius: 340, spring: { type: 'spring', stiffness: 400, damping: 24, mass: 0.6 } as const, stagger: 0.05, angleOffset: -Math.PI / 2 + 0.35 },
+  { radius: 270, spring: { type: 'spring', stiffness: 200, damping: 16, mass: 1 } as const, stagger: 0.02, angleOffset: -Math.PI / 2 - 0.35 },
 ];
 
 function getBurstPreset(cardId: string) {
@@ -43,16 +43,17 @@ function getBurstPreset(cardId: string) {
   return BURST_PRESETS[Math.max(0, index) % BURST_PRESETS.length];
 }
 
-// Gap kept between any two cards once overlaps are resolved. Generous on
-// purpose — a burst has to shove the whole board out of its way so the
-// work has room to breathe, and it also has to clear each item's label
-// pill, which hangs below the item's own box where the solver can't see
-// it (see FolderItemCard.tsx).
-const PUSH_GAP = 120;
+// Gap kept between any two cards once overlaps are resolved. Deliberately
+// tight: the solver's job is to stop things sitting on top of each other,
+// NOT to fling the board apart — a burst has to stay on screen, so every
+// px here widens the cluster. Enough to clear an item's label pill, which
+// hangs below the item's own box where the solver can't see it (see
+// FolderItemCard.tsx), and no more.
+const PUSH_GAP = 26;
 // Passes over every card pair, nudging apart any that still overlap —
 // several folders can be expanded at once, so one burst can cascade into
 // more than just its immediate neighbor.
-const RESOLVE_ITERATIONS = 30;
+const RESOLVE_ITERATIONS = 24;
 
 function childId(cardId: string, itemId: string) {
   return `${cardId}::${itemId}`;
