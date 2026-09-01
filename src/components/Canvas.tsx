@@ -543,7 +543,12 @@ function CanvasInner() {
                   baseSize={itemSize(item)}
                   origin={origin}
                   isSelected={selectedCardId === id}
-                  isDragging={isDraggingCard && selectedCardId === id}
+                  // True while the ITEM is being dragged, and also while its
+                  // folder is — dragging the folder moves every child, and
+                  // they have to track it live. Without the parent case they
+                  // keep their burst spring and visibly chase the folder,
+                  // settling only once the drag ends.
+                  isDragging={isDraggingCard && (selectedCardId === id || selectedCardId === card.id)}
                   onDragStart={handleCardDragStart(id)}
                   onResize={handleItemResize(id)}
                   zoom={zoom}
