@@ -164,28 +164,33 @@ export function FolderItemCard({
             isSelected ? 'border-blue-500' : 'border-gray-200'
           }`}
         >
-          {item.kind !== 'text' && (
-            <div className="flex-1 min-h-0 bg-gray-100">
-              {item.kind === 'video' ? (
-                <video
-                  src={item.src}
-                  poster={item.poster}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="metadata"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <img src={item.src} alt={item.label} loading="lazy" draggable={false} className="w-full h-full object-cover" />
-              )}
+          {/* object-contain, not cover: the item's box already matches the
+              asset's aspect ratio (see itemSize in Canvas.tsx), so nothing
+              is letterboxed at burst size — and once the item is resized by
+              hand the asset stays whole instead of getting cropped. */}
+          {item.kind === 'text' ? (
+            <div className="flex-1 overflow-hidden px-4 py-3">
+              <p className="text-[12px] text-gray-600 leading-relaxed">{item.body}</p>
             </div>
-          )}
-          {item.body && (
-            <div className={`shrink-0 overflow-hidden px-3 py-2 ${item.kind === 'text' ? 'flex-1' : 'max-h-[42%] border-t border-gray-100'}`}>
-              <p className="text-[11px] text-gray-600 leading-relaxed">{item.body}</p>
-            </div>
+          ) : item.kind === 'video' ? (
+            <video
+              src={item.src}
+              poster={item.poster}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              className="w-full h-full object-contain bg-gray-50"
+            />
+          ) : (
+            <img
+              src={item.src}
+              alt={item.label}
+              loading="lazy"
+              draggable={false}
+              className="w-full h-full object-contain bg-gray-50"
+            />
           )}
         </div>
 

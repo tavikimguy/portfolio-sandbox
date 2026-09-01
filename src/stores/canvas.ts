@@ -128,7 +128,9 @@ export interface Drawing {
   color: string;
   brushSize: number;
   timestamp: number;
-  tool?: 'marker' | 'highlighter' | 'eraser';
+  // 'highlighter' is retired from the toolbar but still stored on older
+  // strokes, which must keep rendering the way they were drawn.
+  tool?: 'marker' | 'crayon' | 'highlighter' | 'eraser';
 }
 
 export type Annotation = Comment | Drawing;
@@ -189,14 +191,20 @@ interface CanvasState {
   selectedCardId: string | null;
   setSelectedCardId: (id: string | null) => void;
 
+  // Cards currently showing their expanded content — any number at once.
+  // Canvas.tsx pushes every card apart whenever one of these toggles so
+  // nothing ends up overlapping.
+  expandedCardIds: Set<string>;
+  toggleExpandedCard: (id: string) => void;
+
   selectedCodeWindowId: string | null;
   setSelectedCodeWindowId: (id: string | null) => void;
 
   isDrawing: boolean;
   setIsDrawing: (drawing: boolean) => void;
 
-  activeTool: 'pointer' | 'marker' | 'highlighter' | 'eraser' | 'comment' | 'code';
-  setActiveTool: (tool: 'pointer' | 'marker' | 'highlighter' | 'eraser' | 'comment' | 'code') => void;
+  activeTool: 'pointer' | 'marker' | 'crayon' | 'eraser' | 'comment' | 'code';
+  setActiveTool: (tool: 'pointer' | 'marker' | 'crayon' | 'eraser' | 'comment' | 'code') => void;
 
   penColor: string;
   setPenColor: (color: string) => void;
@@ -301,6 +309,13 @@ export const useCanvasStore = create<CanvasState>()(
     // UI state
     selectedCardId: null,
     setSelectedCardId: (id) => set({ selectedCardId: id }),
+
+    expandedCardIds: new Set(),
+    toggleExpandedCard: (id) => {
+      const next = new Set(get().expandedCardIds);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      set({ expandedCardIds: next });
+    },
 
     selectedCodeWindowId: null,
     setSelectedCodeWindowId: (id) => set({ selectedCodeWindowId: id }),

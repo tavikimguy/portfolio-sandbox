@@ -1,7 +1,14 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import type { PortfolioCard } from '@/lib/portfolio-cards';
 import { useCanvasStore } from '@/stores/canvas';
+
+// Used for any position/size change NOT driven by direct pointer dragging
+// (push-out-of-the-way, expand, collapse) — a spring, not a duration-based
+// ease, so it matches the weight of the drag/resize/rotate motion already
+// on this card. Direct pointer interaction bypasses this entirely (see
+// isTransforming below) so dragging still tracks the cursor 1:1, no lag.
+const REFLOW_SPRING = { type: 'spring', stiffness: 260, damping: 30, mass: 0.9 } as const;
 
 // CSS has no built-in "rotate" cursor keyword, so this is a custom cursor:
 // a circular arrow icon (white halo behind a black line, so it reads on any
@@ -15,6 +22,8 @@ const RESIZE_CURSOR = (fallback: string) => `url('/cursors/resize.png') 15 16, $
 interface CardProps {
   card: PortfolioCard;
   isSelected: boolean;
+  isExpanded: boolean;
+  isDragging: boolean;
   onSelect: () => void;
   onDragStart: (e: React.PointerEvent<HTMLDivElement>) => void;
   transform: {
@@ -30,12 +39,22 @@ interface CardProps {
 export function Card({
   card,
   isSelected,
+  isExpanded,
+  isDragging,
   onSelect,
   onDragStart,
   transform,
 }: CardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const updateCardTransform = useCanvasStore((s) => s.updateCardTransform);
+  // True only while THIS card is being resized/rotated by hand — kept
+  // separate from `isDragging` (drag lives in Canvas.tsx) since resize/
+  // rotate are driven entirely by this component's own pointer handlers.
+  const [isInteracting, setIsInteracting] = useState(false);
+  // Any direct pointer manipulation should track the cursor exactly, with
+  // no spring lag — only non-interactive position changes (push/expand/
+  // collapse) get the spring.
+  const isTransforming = isDragging || isInteracting;
 
   // One resize handle per corner, each anchored on the OPPOSITE corner —
   // dragging the top-left handle keeps the bottom-right corner fixed, etc.
@@ -50,6 +69,7 @@ export function Card({
 
   const handleResizeStart = (corner: Corner) => (e: React.PointerEvent<HTMLDivElement>) => {
     e.stopPropagation();
+    setIsInteracting(true);
     const startX = e.clientX;
     const startY = e.clientY;
     const startLeft = transform.x;
@@ -78,6 +98,7 @@ export function Card({
     };
 
     const handleEnd = () => {
+      setIsInteracting(false);
       document.body.style.cursor = '';
       document.removeEventListener('pointermove', handleMove);
       document.removeEventListener('pointerup', handleEnd);
@@ -88,9 +109,10 @@ export function Card({
   };
 
   const handleRotateStart = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.stopPropagation();
     const cardEl = cardRef.current;
     if (!cardEl) return;
+    e.stopPropagation();
+    setIsInteracting(true);
 
     // Measure the center once, up front — rotation pivots around it, so it
     // doesn't move during the drag. Re-measuring every pointermove (via
@@ -115,6 +137,7 @@ export function Card({
     };
 
     const handleEnd = () => {
+      setIsInteracting(false);
       document.body.style.cursor = '';
       document.removeEventListener('pointermove', handleMove);
       document.removeEventListener('pointerup', handleEnd);
@@ -129,19 +152,30 @@ export function Card({
       ref={cardRef}
       className={`absolute border-2 rounded-lg cursor-move transition-colors ${
         isSelected ? 'border-blue-500 shadow-lg' : 'border-gray-200 hover:border-gray-300'
-      } ${card.bgColor}`}
-      style={{
+      } ${isExpanded ? 'ring-2 ring-offset-2 ring-blue-300' : ''} ${card.bgColor}`}
+      // left/top/width/height/rotate are animated (spring) rather than set
+      // via plain style — that's what makes push/expand/collapse glide
+      // instead of teleport. transition below switches to instant whenever
+      // THIS card is the one being directly dragged/resized/rotated, so
+      // hand-driven interaction still tracks the cursor with zero lag.
+      animate={{
         left: transform.x,
         top: transform.y,
         width: transform.width,
         height: transform.height,
         rotate: transform.rotation,
-        zIndex: transform.zIndex,
       }}
+      transition={isTransforming ? { duration: 0 } : REFLOW_SPRING}
+      // Expanded cards render above collapsed ones so they don't get
+      // visually buried mid-push; among several expanded at once, relative
+      // order doesn't matter since they've all been pushed clear of overlap.
+      style={{ zIndex: isExpanded ? 10 : transform.zIndex }}
       onPointerDown={onDragStart}
       onClick={onSelect}
     >
-      {/* Content */}
+      {/* The card is just the holder/trigger — it never shows its own
+          content. What's "inside" it shoots out as separate item cards
+          (see Canvas.tsx) when isExpanded flips on. */}
       <div className="p-4 h-full flex flex-col justify-between pointer-events-none select-none overflow-hidden rounded-md">
         <div>
           <h3 className="font-bold text-lg text-gray-900">{card.title}</h3>

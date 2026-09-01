@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCanvasStore } from '@/stores/canvas';
 import clsx from 'clsx';
-import { MousePointer2, Pen, Highlighter, Eraser, MessageCircle, Code, Undo2, Redo2 } from 'lucide-react';
+import { MousePointer2, Pen, Brush, Eraser, MessageCircle, Code, Undo2, Redo2 } from 'lucide-react';
 
 // A tight, FigJam-like palette — a handful of solid presets plus a genuine
 // "pick anything" swatch, rather than one big swatch row.
@@ -16,7 +16,7 @@ const BRUSH_SIZES = [
 const TOOLS = [
   { id: 'pointer', label: 'Move', Icon: MousePointer2 },
   { id: 'marker', label: 'Marker', Icon: Pen },
-  { id: 'highlighter', label: 'Highlighter', Icon: Highlighter },
+  { id: 'crayon', label: 'Crayon', Icon: Brush },
   { id: 'eraser', label: 'Eraser', Icon: Eraser },
   { id: 'comment', label: 'Comment', Icon: MessageCircle },
   { id: 'code', label: 'Code window', Icon: Code },
@@ -38,8 +38,8 @@ export function Toolbar() {
     history,
   } = useCanvasStore();
 
-  const showOptions = activeTool === 'marker' || activeTool === 'highlighter' || activeTool === 'eraser';
-  const showColor = activeTool === 'marker' || activeTool === 'highlighter';
+  const showOptions = activeTool === 'marker' || activeTool === 'crayon' || activeTool === 'eraser';
+  const showColor = activeTool === 'marker' || activeTool === 'crayon';
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[300]">
@@ -126,15 +126,7 @@ export function Toolbar() {
         {TOOLS.map((tool) => (
           <button
             key={tool.id}
-            onClick={() => {
-              setActiveTool(tool.id);
-              // Black reads as a gray smudge under multiply blending —
-              // default to a proper highlight color instead, but only
-              // when the user hasn't already picked something else.
-              if (tool.id === 'highlighter' && penColor === '#000000') {
-                setPenColor('#FFFF00');
-              }
-            }}
+            onClick={() => setActiveTool(tool.id)}
             className={clsx(
               'w-9 h-9 rounded-xl flex items-center justify-center transition-colors',
               activeTool === tool.id

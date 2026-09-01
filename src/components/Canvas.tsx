@@ -3,7 +3,7 @@ import { AnimatePresence } from 'motion/react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { useCanvasStore, type CardTransform } from '@/stores/canvas';
 import { fetchAnnotations, createAnnotation } from '@/lib/api';
-import { PORTFOLIO_CARDS, CANVAS_WIDTH, CANVAS_HEIGHT } from '@/lib/portfolio-cards';
+import { PORTFOLIO_CARDS, CANVAS_WIDTH, CANVAS_HEIGHT, type FolderItem } from '@/lib/portfolio-cards';
 import { clampPan, computeZoomStep, clampBoxToBoard } from '@/lib/canvas-bounds';
 import { usePointerVelocity } from '@/lib/usePointerVelocity';
 import { Card } from './Card';
@@ -13,11 +13,20 @@ import { DrawingCanvas } from './DrawingCanvas';
 import { CommentLayer } from './CommentLayer';
 import { Toolbar } from './Toolbar';
 
-// Items are a fixed size, shot out radially around a folder that itself
-// never resizes (the winner from workshopping three variants). Sized to
-// actually read the asset inside, not just hint at it.
-const ITEM_WIDTH = 300;
-const ITEM_HEIGHT = 260;
+// Items are shot out radially around a folder that itself never resizes
+// (the winner from workshopping three variants). Each media item carries
+// its own width/height, fitted to the asset's true aspect ratio, so a
+// 16:9 video and a square painting come out correctly proportioned rather
+// than cropped into one shared box. Text items have no asset to match.
+const TEXT_ITEM_WIDTH = 340;
+const TEXT_ITEM_HEIGHT = 300;
+
+function itemSize(item: FolderItem) {
+  return {
+    width: item.width ?? TEXT_ITEM_WIDTH,
+    height: item.height ?? TEXT_ITEM_HEIGHT,
+  };
+}
 
 // Three hand-tuned "feels," cycled across folders by index so the burst
 // isn't visually identical on every card — different radius, spring
@@ -34,14 +43,16 @@ function getBurstPreset(cardId: string) {
   return BURST_PRESETS[Math.max(0, index) % BURST_PRESETS.length];
 }
 
-// Gap kept between any two cards once overlaps are resolved. Wide enough
-// to clear an item's label pill, which hangs below the item's own box (so
-// the overlap solver can't see it — see FolderItemCard.tsx).
-const PUSH_GAP = 56;
+// Gap kept between any two cards once overlaps are resolved. Generous on
+// purpose — a burst has to shove the whole board out of its way so the
+// work has room to breathe, and it also has to clear each item's label
+// pill, which hangs below the item's own box where the solver can't see
+// it (see FolderItemCard.tsx).
+const PUSH_GAP = 120;
 // Passes over every card pair, nudging apart any that still overlap —
 // several folders can be expanded at once, so one burst can cascade into
 // more than just its immediate neighbor.
-const RESOLVE_ITERATIONS = 14;
+const RESOLVE_ITERATIONS = 30;
 
 function childId(cardId: string, itemId: string) {
   return `${cardId}::${itemId}`;
@@ -368,11 +379,12 @@ function CanvasInner() {
       items.forEach((item, i) => {
         const id = childId(targetId, item.id);
         const angle = (i / n) * Math.PI * 2 + preset.angleOffset;
+        const size = itemSize(item);
         boxes.set(id, {
-          x: centerX + Math.cos(angle) * preset.radius - ITEM_WIDTH / 2,
-          y: centerY + Math.sin(angle) * preset.radius - ITEM_HEIGHT / 2,
-          width: ITEM_WIDTH,
-          height: ITEM_HEIGHT,
+          x: centerX + Math.cos(angle) * preset.radius - size.width / 2,
+          y: centerY + Math.sin(angle) * preset.radius - size.height / 2,
+          width: size.width,
+          height: size.height,
         });
         childIds.add(id);
       });
