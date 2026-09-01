@@ -311,6 +311,22 @@ function CanvasInner() {
       cardY: transform.y,
     };
 
+    // Dragging an OPEN folder takes its shot-out items with it, so the
+    // burst stays a single object you can reposition as a whole. Their
+    // start positions are captured once here rather than read per-frame,
+    // so the items track the folder's delta exactly instead of drifting.
+    // (Empty for item drags and for closed folders — an item id never
+    // matches a card id, so the lookup just misses.)
+    const folder = PORTFOLIO_CARDS.find((c) => c.id === cardId);
+    const followers =
+      folder && expandedCardIds.has(cardId)
+        ? (folder.items ?? []).flatMap((item) => {
+            const id = childId(cardId, item.id);
+            const t = cardTransforms.get(id);
+            return t ? [{ id, x: t.x, y: t.y }] : [];
+          })
+        : [];
+
     // Only counts as a drag (and so should swallow the click that follows)
     // once the pointer has actually moved a couple px — otherwise every
     // plain click would get eaten as a "just dragged" no-op.
@@ -327,6 +343,7 @@ function CanvasInner() {
         x: dragStartRef.current.cardX + deltaX,
         y: dragStartRef.current.cardY + deltaY,
       });
+      followers.forEach((f) => updateCardTransform(f.id, { x: f.x + deltaX, y: f.y + deltaY }));
     };
 
     const handleEnd = () => {
@@ -523,11 +540,13 @@ function CanvasInner() {
                   key={id}
                   item={item}
                   transform={transform}
+                  baseSize={itemSize(item)}
                   origin={origin}
                   isSelected={selectedCardId === id}
                   isDragging={isDraggingCard && selectedCardId === id}
                   onDragStart={handleCardDragStart(id)}
                   onResize={handleItemResize(id)}
+                  zoom={zoom}
                   vx={vx}
                   vy={vy}
                   transition={{ ...preset.spring, delay: i * preset.stagger }}

@@ -20,6 +20,11 @@ const MAX_ROTATE_VELOCITY_INPUT = 1800;
 interface FolderItemCardProps {
   item: FolderItem;
   transform: { x: number; y: number; width: number; height: number; rotation: number };
+  // The size this item bursts out at (Canvas.tsx's itemSize). Everything
+  // inside is laid out against this and then scaled to whatever the item
+  // has since been resized to, so the content warps with the box instead
+  // of reflowing inside it.
+  baseSize: { width: number; height: number };
   // The parent card's center at the moment this item mounts — both the
   // enter and exit animation collapse to this single point, so items
   // visibly shoot out of (and get pulled back into) their holder.
@@ -34,6 +39,9 @@ interface FolderItemCardProps {
   // Covers both resize (x/y/width/height) and the rotate handle
   // (rotation) — one patch callback into the store either way.
   onResize: (patch: { x?: number; y?: number; width?: number; height?: number; rotation?: number }) => void;
+  // Board scale, so pointer deltas during a resize can be converted from
+  // screen px back into board px.
+  zoom: number;
   vx: MotionValue<number>;
   vy: MotionValue<number>;
   // Per-folder spring + stagger delay (Canvas.tsx cycles a few presets
@@ -44,11 +52,13 @@ interface FolderItemCardProps {
 export function FolderItemCard({
   item,
   transform,
+  baseSize,
   origin,
   isSelected,
   isDragging,
   onDragStart,
   onResize,
+  zoom,
   vx,
   vy,
   transition,
@@ -91,11 +101,27 @@ export function FolderItemCard({
     const growsRight = corner === 'ne' || corner === 'se';
     const growsDown = corner === 'sw' || corner === 'se';
 
+    const startAspect = startWidth / startHeight;
+
     const handleMove = (moveEvent: PointerEvent) => {
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
-      const width = Math.max(MIN_ITEM_SIZE, startWidth + (growsRight ? deltaX : -deltaX));
-      const height = Math.max(MIN_ITEM_SIZE, startHeight + (growsDown ? deltaY : -deltaY));
+      // Pointer deltas are screen px; the board is scaled, so divide by
+      // zoom or the corner runs away from the cursor when zoomed out.
+      const deltaX = (moveEvent.clientX - startX) / zoom;
+      const deltaY = (moveEvent.clientY - startY) / zoom;
+      let width = Math.max(MIN_ITEM_SIZE, startWidth + (growsRight ? deltaX : -deltaX));
+      let height = Math.max(MIN_ITEM_SIZE, startHeight + (growsDown ? deltaY : -deltaY));
+
+      // Shift locks the proportions, Figma-style: the axis you pulled
+      // further wins and the other follows it. Without it the two are
+      // independent, which is what lets the content warp.
+      if (moveEvent.shiftKey) {
+        if (Math.abs(width - startWidth) >= Math.abs(height - startHeight) * startAspect) {
+          height = Math.max(MIN_ITEM_SIZE, width / startAspect);
+        } else {
+          width = Math.max(MIN_ITEM_SIZE, height * startAspect);
+        }
+      }
+
       onResize({
         width,
         height,
@@ -164,13 +190,28 @@ export function FolderItemCard({
             isSelected ? 'border-blue-500' : 'border-gray-200'
           }`}
         >
-          {/* object-contain, not cover: the item's box already matches the
-              asset's aspect ratio (see itemSize in Canvas.tsx), so nothing
-              is letterboxed at burst size — and once the item is resized by
-              hand the asset stays whole instead of getting cropped. */}
+          {/* object-fill, so the asset stretches with the box the way a
+              placed image does in Figma. The burst size already matches the
+              asset's true aspect ratio (itemSize in Canvas.tsx), so it
+              starts undistorted and only warps once you pull a corner —
+              and Shift-resize keeps the ratio, so it never warps by
+              accident. Nothing is ever cropped either way. */}
           {item.kind === 'text' ? (
-            <div className="flex-1 overflow-hidden px-4 py-3">
-              <p className="text-[12px] text-gray-600 leading-relaxed">{item.body}</p>
+            // Laid out at the burst size and then scaled, so the type grows
+            // with the box (and skews with it) instead of the paragraph
+            // just reflowing inside a bigger frame.
+            <div className="flex-1 overflow-hidden">
+              <div
+                className="px-4 py-3"
+                style={{
+                  width: baseSize.width,
+                  height: baseSize.height,
+                  transformOrigin: 'top left',
+                  transform: `scale(${transform.width / baseSize.width}, ${transform.height / baseSize.height})`,
+                }}
+              >
+                <p className="text-[12px] text-gray-600 leading-relaxed">{item.body}</p>
+              </div>
             </div>
           ) : item.kind === 'video' ? (
             <video
@@ -181,16 +222,10 @@ export function FolderItemCard({
               muted
               playsInline
               preload="metadata"
-              className="w-full h-full object-contain bg-gray-50"
+              className="w-full h-full object-fill bg-gray-50"
             />
           ) : (
-            <img
-              src={item.src}
-              alt={item.label}
-              loading="lazy"
-              draggable={false}
-              className="w-full h-full object-contain bg-gray-50"
-            />
+            <img src={item.src} alt={item.label} loading="lazy" draggable={false} className="w-full h-full object-fill bg-gray-50" />
           )}
         </div>
 
