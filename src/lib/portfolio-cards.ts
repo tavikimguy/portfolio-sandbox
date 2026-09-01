@@ -8,10 +8,28 @@ export interface PortfolioCard {
   height: number;
   bgColor: string;
   link?: string;
+  // Renders this card AS an object from the case study — no panel, no
+  // border, no title block — instead of a titled card. `still` is the idle
+  // frame, `video` plays on hover.
+  object?: CardObject;
   // The card itself is just the holder/trigger — it doesn't show its own
   // content. Clicking it shoots these items out onto the canvas as their
   // own small cards; closing it pulls them back in.
   items?: FolderItem[];
+}
+
+export interface CardObject {
+  // Idle frame — frame 0 of `video`, so hover starts exactly where the
+  // still left off.
+  still: string;
+  // Plays on hover, pauses back to the still on leave.
+  video: string;
+  // Set when the artwork is light-on-dark. The board is white, so the media
+  // is inverted and multiplied into it: the dark ground goes to white and
+  // drops out, the light logo goes dark and reads. Cheaper and safer than
+  // keying the background out of the pixels, which would also eat the black
+  // outlines the logo uses to separate its own faces.
+  invertForLightBoard?: boolean;
 }
 
 export type FolderItemKind = 'image' | 'video' | 'text';
@@ -332,10 +350,20 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
     description: 'Building the brand for a city planning conference',
     x: 3470,
     y: 2010,
-    width: 320,
-    height: 200,
+    // Sized to the logo object's own 560x550 rather than the standard card
+    // 320x200 — it's artwork now, not a panel, so it shouldn't be letterboxed.
+    width: 300,
+    height: 295,
     bgColor: 'bg-pink-50',
     link: 'https://www.tavi.kim/casestudy-wfoc',
+    // The rotating 3D monogram that stood for this project on the Framer
+    // site. Cropped tight to the logo's own travel across the animation, so
+    // it sits as an object rather than inside a 16:9 letterbox.
+    object: {
+      still: '/assets/wfoc/logo-object-still.png',
+      video: '/assets/wfoc/logo-object.mp4',
+      invertForLightBoard: true,
+    },
     items: [
       {
         id: 'overview',

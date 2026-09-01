@@ -2,8 +2,8 @@
   "source": "https://www.tavi.kim/",
   "fetchedAt": "2026-08-31",
   "note": "Mirrored from the live Framer site, then renamed descriptively (originals were opaque Framer hashes; `src` keeps the source URL). `pages` lists which route(s) referenced each asset; `shared/` holds assets used on more than one.",
-  "count": 44,
-  "totalBytes": 85744678,
+  "count": 46,
+  "totalBytes": 86380764,
   "assets": [
     {
       "file": "/assets/blueprint/between-sessions-community.png",
@@ -540,6 +540,34 @@
       "width": 2000,
       "height": 1125,
       "seconds": null
+    },
+    {
+      "file": "/assets/wfoc/logo-object-still.png",
+      "kind": "image",
+      "mime": "image/png",
+      "width": 560,
+      "height": 550,
+      "seconds": null,
+      "derivedFrom": "/assets/wfoc/logo-object.mp4",
+      "note": "Frame 0 of logo-object.mp4 — the idle state before hover.",
+      "bytes": 207704,
+      "pages": [
+        "wfoc"
+      ]
+    },
+    {
+      "file": "/assets/wfoc/logo-object.mp4",
+      "kind": "video",
+      "mime": "video/mp4",
+      "width": 560,
+      "height": 550,
+      "seconds": 4.2,
+      "derivedFrom": "/assets/shared/wfoc-logo-animation.mp4",
+      "note": "Cropped to the logo's own travel across all 50 frames (900x884 at 508,82 of 1920x1080) and re-encoded. Card object for Wharton Future of Cities.",
+      "bytes": 428382,
+      "pages": [
+        "wfoc"
+      ]
     },
     {
       "file": "/assets/wfoc/merchandise.png",

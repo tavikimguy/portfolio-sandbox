@@ -51,6 +51,23 @@ export function Card({
   // separate from `isDragging` (drag lives in Canvas.tsx) since resize/
   // rotate are driven entirely by this component's own pointer handlers.
   const [isInteracting, setIsInteracting] = useState(false);
+  // Object cards swap a still for a looping clip on hover; see handleHover.
+  const [isHovered, setIsHovered] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handleHover = (entering: boolean) => {
+    setIsHovered(entering);
+    const video = videoRef.current;
+    if (!video) return;
+    if (entering) {
+      // play() rejects if the pointer leaves before it resolves — nothing
+      // to recover from, the leave branch has already paused it.
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+      video.currentTime = 0;
+    }
+  };
   // Any direct pointer manipulation should track the cursor exactly, with
   // no spring lag — only non-interactive position changes (push/expand/
   // collapse) get the spring.
@@ -150,9 +167,18 @@ export function Card({
   return (
     <motion.div
       ref={cardRef}
-      className={`absolute border-2 rounded-lg cursor-move transition-colors ${
-        isSelected ? 'border-blue-500 shadow-lg' : 'border-gray-200 hover:border-gray-300'
-      } ${isExpanded ? 'ring-2 ring-offset-2 ring-blue-300' : ''} ${card.bgColor}`}
+      // An object card drops the whole panel — no border, no fill, no
+      // shadow — so the artwork itself is the thing on the board. Selection
+      // and expansion still need to read, so those rings stay.
+      className={`absolute cursor-move transition-colors ${
+        card.object
+          ? isSelected
+            ? 'border-2 border-blue-500 rounded-lg'
+            : ''
+          : `border-2 rounded-lg ${
+              isSelected ? 'border-blue-500 shadow-lg' : 'border-gray-200 hover:border-gray-300'
+            } ${card.bgColor}`
+      } ${isExpanded ? 'ring-2 ring-offset-2 ring-blue-300 rounded-lg' : ''}`}
       // left/top/width/height/rotate are animated (spring) rather than set
       // via plain style — that's what makes push/expand/collapse glide
       // instead of teleport. transition below switches to instant whenever
@@ -172,16 +198,45 @@ export function Card({
       style={{ zIndex: isExpanded ? 10 : transform.zIndex }}
       onPointerDown={onDragStart}
       onClick={onSelect}
+      onMouseEnter={() => handleHover(true)}
+      onMouseLeave={() => handleHover(false)}
     >
       {/* The card is just the holder/trigger — it never shows its own
           content. What's "inside" it shoots out as separate item cards
           (see Canvas.tsx) when isExpanded flips on. */}
-      <div className="p-4 h-full flex flex-col justify-between pointer-events-none select-none overflow-hidden rounded-md">
-        <div>
-          <h3 className="font-bold text-lg text-gray-900">{card.title}</h3>
-          <p className="text-sm text-gray-600 mt-2">{card.description}</p>
+      {card.object ? (
+        <div className="relative h-full w-full pointer-events-none select-none">
+          {/* Still and clip are stacked and cross-faded rather than swapped,
+              so there's no blank frame while the video starts. Frame 0 of
+              the clip IS the still, so the two line up exactly. */}
+          <img
+            src={card.object.still}
+            alt={card.title}
+            draggable={false}
+            className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-200 ${
+              isHovered ? 'opacity-0' : 'opacity-100'
+            } ${card.object.invertForLightBoard ? 'invert mix-blend-multiply' : ''}`}
+          />
+          <video
+            ref={videoRef}
+            src={card.object.video}
+            muted
+            loop
+            playsInline
+            preload="auto"
+            className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-200 ${
+              isHovered ? 'opacity-100' : 'opacity-0'
+            } ${card.object.invertForLightBoard ? 'invert mix-blend-multiply' : ''}`}
+          />
         </div>
-      </div>
+      ) : (
+        <div className="p-4 h-full flex flex-col justify-between pointer-events-none select-none overflow-hidden rounded-md">
+          <div>
+            <h3 className="font-bold text-lg text-gray-900">{card.title}</h3>
+            <p className="text-sm text-gray-600 mt-2">{card.description}</p>
+          </div>
+        </div>
+      )}
 
       {isSelected && (
         <>
