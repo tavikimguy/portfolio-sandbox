@@ -3,7 +3,7 @@
   "fetchedAt": "2026-08-31",
   "note": "Mirrored from the live Framer site, then renamed descriptively (originals were opaque Framer hashes; `src` keeps the source URL). `pages` lists which route(s) referenced each asset; `shared/` holds assets used on more than one.",
   "count": 44,
-  "totalBytes": 86663039,
+  "totalBytes": 85744678,
   "assets": [
     {
       "file": "/assets/blueprint/between-sessions-community.png",
@@ -78,7 +78,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 353904,
+      "bytes": 235961,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -104,7 +104,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 187890,
+      "bytes": 126217,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -117,7 +117,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 145705,
+      "bytes": 63171,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -130,7 +130,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 48144,
+      "bytes": 45665,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -156,7 +156,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 114386,
+      "bytes": 60473,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -364,7 +364,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 176893,
+      "bytes": 121677,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -377,7 +377,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 119721,
+      "bytes": 57836,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -390,7 +390,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 69930,
+      "bytes": 54013,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -497,7 +497,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 124562,
+      "bytes": 97443,
       "width": 2000,
       "height": 1648,
       "seconds": null
@@ -510,7 +510,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 101384,
+      "bytes": 51374,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -523,7 +523,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 173988,
+      "bytes": 142979,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -536,7 +536,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 47358,
+      "bytes": 41655,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -549,7 +549,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 382274,
+      "bytes": 182044,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -562,7 +562,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 432027,
+      "bytes": 303935,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -575,7 +575,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 160907,
+      "bytes": 139525,
       "width": 2000,
       "height": 1125,
       "seconds": null
@@ -588,7 +588,7 @@
       ],
       "kind": "image",
       "mime": "image/png",
-      "bytes": 38986,
+      "bytes": 35730,
       "width": 2000,
       "height": 1125,
       "seconds": null

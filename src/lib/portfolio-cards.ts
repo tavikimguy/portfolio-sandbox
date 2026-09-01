@@ -34,6 +34,11 @@ export interface FolderItem {
   // Copy describing THIS asset, revealed on hover rather than sitting out
   // on the board — see FolderItemCard.tsx.
   caption?: string;
+  // This asset's white surround has been flood-filled to transparent, so
+  // it renders with no card chrome at all and sits directly on the board.
+  // Only set on slide-style artwork; screenshots keep their frame, since
+  // their white IS the interface rather than a backdrop.
+  cutout?: boolean;
   // Burst size, fitted to the asset's real aspect ratio inside a 280px
   // box so nothing gets letterboxed or cropped on the way out. Canvas.tsx
   // falls back to TEXT_ITEM_* when these are absent.
@@ -76,6 +81,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Research',
         kind: 'image',
         src: '/assets/pieces/user-insight.png',
+        cutout: true,
         caption:
           'To gain a deeper understanding of the user base and competitor market, I conducted a thorough analysis. Being a former user of many of these platforms and a dedicated reseller myself I had an idea of where to look an a network of suitable subjects to research/survey.',
         width: 280,
@@ -86,6 +92,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Wireframing',
         kind: 'image',
         src: '/assets/pieces/wireframes.png',
+        cutout: true,
         caption:
           'I pulled a lot of my inspiration for my wireframes from existing platforms, are.na, and behance. I tried my best to keep things light while maintaining a structure and flow that I could easily modify as I discovered holes in my design framework.',
         width: 280,
@@ -96,6 +103,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Hi-Fidelity Designs',
         kind: 'image',
         src: '/assets/pieces/hifi-designs.png',
+        cutout: true,
         caption:
           'After multiple iterations and critique, the final designs for mobile and web were established. These designs featured sleek and easily distinguishable elements for interactive sections as well as informational components to help users better onboard and understand the platform I created.',
         width: 280,
@@ -197,17 +205,9 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Social and Paid Delivery',
         kind: 'image',
         src: '/assets/blueprint/social-deliverables.png',
+        cutout: true,
         caption:
           'My last responsibility at Blueprint is creating all of our social and ad assets. These are delivered twice a week on the social end. These assets vary in nature depending on the content and copy provided, ranging from static posts to dynamic video content.',
-        width: 280,
-        height: 158,
-      },
-      {
-        id: 'ocean',
-        label: 'Background Footage',
-        kind: 'video',
-        src: '/assets/shared/ocean-loop.mp4',
-        poster: '/assets/shared/ocean-poster.jpg',
         width: 280,
         height: 158,
       },
@@ -247,6 +247,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'The Reselling Process',
         kind: 'image',
         src: '/assets/flipkit/reselling-process-diagram.png',
+        cutout: true,
         caption:
           'To begin the creation of our product we began by analyzing two categories of competing product: existing solutions and the current pipeline without the solution. Collecting data from over 400 responses while simultaneously onboarding users onto a beta version of the product to collect further data downstream.',
         width: 280,
@@ -257,6 +258,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Research and Analysis',
         kind: 'image',
         src: '/assets/flipkit/user-research.png',
+        cutout: true,
         caption: 'My goal was to inform decisions regarding flow, key features, and points of friction. Here are my main findings:',
         width: 280,
         height: 158,
@@ -266,6 +268,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Problems',
         kind: 'image',
         src: '/assets/flipkit/problems.png',
+        cutout: true,
         width: 280,
         height: 158,
       },
@@ -284,6 +287,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Early Ideation and Lo-Fi',
         kind: 'image',
         src: '/assets/flipkit/lofi-designs.png',
+        cutout: true,
         width: 280,
         height: 158,
       },
@@ -349,6 +353,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'The Logo',
         kind: 'image',
         src: '/assets/wfoc/logo-3d-variations.png',
+        cutout: true,
         caption:
           'For the logo I took two approaches. The first approach took elements from urban planning such as housing infrastructure, building heatmaps, and weather maps to guide my thinking. The client asked for a 3D option that would be appropriate as a .gif for their website and social deliverables.',
         width: 280,
@@ -367,6 +372,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Logo Mark',
         kind: 'image',
         src: '/assets/wfoc/logo-mark.png',
+        cutout: true,
         caption:
           'The second logo was at the special request of the client for a Scandinavian inspired flat mark. For this approach I once again explored symbols from urban planning such as traffic signs and crosswalks to create a system of symbols that could be used to form the conference title.',
         width: 280,
@@ -377,6 +383,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Typeface + Palette',
         kind: 'image',
         src: '/assets/wfoc/typeface-and-palette.png',
+        cutout: true,
         caption:
           'The palette was designed to be mostly neutral colors for visibility and softness, while conveying the major themes: technology (purple), nature (green), humanity (blue), and infrastructure (orange). For the typeface the most important consideration was that it be highly legible and simple — Neue Haas Grotesk by Christian Schwartz fit this criteria perfectly.',
         width: 280,
@@ -387,6 +394,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Merchandise',
         kind: 'image',
         src: '/assets/wfoc/merchandise.png',
+        cutout: true,
         caption:
           'With the two logos built out and approved, the next step was to create marketing materials for the conference. I created a system of templates that could easily be edited and contain the proper branding elements to subtly reference the brand system I created.',
         width: 280,
@@ -397,6 +405,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Print Posters',
         kind: 'image',
         src: '/assets/wfoc/print-posters.png',
+        cutout: true,
         width: 280,
         height: 158,
       },
@@ -405,6 +414,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Social Deliverables',
         kind: 'image',
         src: '/assets/wfoc/social-deliverables.png',
+        cutout: true,
         width: 280,
         height: 158,
       },
@@ -510,6 +520,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Ideation and Wireframing',
         kind: 'image',
         src: '/assets/sprint/inspo-and-wireframing.png',
+        cutout: true,
         caption:
           'With time in mind, I made very rough wireframes of my initial idea and gathered some inspiration from my are.na board. I designed with simplicity and a seamless userflow in mind. I opted towards a modular design aesthetic that would make adding new features and sections easy.',
         width: 280,
@@ -520,6 +531,7 @@ export const PORTFOLIO_CARDS: PortfolioCard[] = [
         label: 'Hi-Fidelity Designs',
         kind: 'image',
         src: '/assets/sprint/hifi-frames.png',
+        cutout: true,
         caption:
           'After a few iterations and millions of edits (as many as my time limit would allow) I delivered the following hi fidelity wireframes to my professor.',
         width: 280,

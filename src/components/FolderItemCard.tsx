@@ -192,9 +192,15 @@ export function FolderItemCard({
           wiggle), composing on top of the outer element's persistent
           position/size/rotation instead of fighting over the same values. */}
       <motion.div className="relative w-full h-full pointer-events-none" style={{ scale: bobbleScale, rotate: bobbleRotate }}>
+        {/* A cutout has had its white surround made transparent, so it gets
+            no frame at all — no card, no border, no shadow — and reads as
+            the artwork sitting straight on the board. Selection still needs
+            an outline, so that one border comes back when selected. */}
         <div
-          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border-2 bg-white shadow-lg ${
-            isSelected ? 'border-blue-500' : 'border-gray-200'
+          className={`absolute inset-0 flex flex-col overflow-hidden ${
+            item.cutout
+              ? `rounded-lg ${isSelected ? 'border-2 border-blue-500' : ''}`
+              : `rounded-2xl border-2 bg-white shadow-lg ${isSelected ? 'border-blue-500' : 'border-gray-200'}`
           }`}
         >
           {/* object-fill, so the asset stretches with the box the way a
@@ -229,10 +235,10 @@ export function FolderItemCard({
               muted
               playsInline
               preload="metadata"
-              className="w-full h-full object-fill bg-gray-50"
+              className={`w-full h-full object-fill ${item.cutout ? '' : 'bg-gray-50'}`}
             />
           ) : (
-            <img src={item.src} alt={item.label} loading="lazy" draggable={false} className="w-full h-full object-fill bg-gray-50" />
+            <img src={item.src} alt={item.label} loading="lazy" draggable={false} className={`w-full h-full object-fill ${item.cutout ? '' : 'bg-gray-50'}`} />
           )}
         </div>
 
