@@ -38,6 +38,11 @@ const BURST_PRESETS = [
   { radius: 270, spring: { type: 'spring', stiffness: 200, damping: 16, mass: 1 } as const, stagger: 0.02, angleOffset: -Math.PI / 2 - 0.35 },
 ];
 
+// Per-item delay while a burst follows its folder around. Small on
+// purpose: at ~16 items the last one starts a quarter second after the
+// first, which reads as a ripple rather than a lag.
+const FOLLOW_STAGGER = 0.015;
+
 function getBurstPreset(cardId: string) {
   const index = PORTFOLIO_CARDS.findIndex((c) => c.id === cardId);
   return BURST_PRESETS[Math.max(0, index) % BURST_PRESETS.length];
@@ -543,18 +548,22 @@ function CanvasInner() {
                   baseSize={itemSize(item)}
                   origin={origin}
                   isSelected={selectedCardId === id}
-                  // True while the ITEM is being dragged, and also while its
-                  // folder is — dragging the folder moves every child, and
-                  // they have to track it live. Without the parent case they
-                  // keep their burst spring and visibly chase the folder,
-                  // settling only once the drag ends.
-                  isDragging={isDraggingCard && (selectedCardId === id || selectedCardId === card.id)}
+                  isDragging={isDraggingCard && selectedCardId === id}
                   onDragStart={handleCardDragStart(id)}
                   onResize={handleItemResize(id)}
                   zoom={zoom}
                   vx={vx}
                   vy={vy}
-                  transition={{ ...preset.spring, delay: i * preset.stagger }}
+                  transition={
+                    isDraggingCard && selectedCardId === card.id
+                      ? // Following the folder rather than bursting: a soft
+                        // spring plus a small per-item cascade, so the items
+                        // trail the drag and arrive in a ripple instead of
+                        // moving as one rigid block. Loose enough to read as
+                        // trailing, tight enough not to feel laggy.
+                        { type: 'spring', stiffness: 280, damping: 30, mass: 0.6, delay: i * FOLLOW_STAGGER }
+                      : { ...preset.spring, delay: i * preset.stagger }
+                  }
                 />
               );
             });
