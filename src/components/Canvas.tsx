@@ -177,6 +177,21 @@ function CanvasInner() {
   const pendingIdsRef = useRef<Set<string>>(new Set());
   const syncedIdsRef = useRef<Set<string>>(new Set());
 
+  // Open on the work. The cards sit in the middle of a 5760x4320 board, so
+  // without this the view starts at the board's top-left corner staring at
+  // empty grid. Mount only — after this the user's own pan stands.
+  useEffect(() => {
+    const left = Math.min(...PORTFOLIO_CARDS.map((c) => c.x));
+    const right = Math.max(...PORTFOLIO_CARDS.map((c) => c.x + c.width));
+    const top = Math.min(...PORTFOLIO_CARDS.map((c) => c.y));
+    const bottom = Math.max(...PORTFOLIO_CARDS.map((c) => c.y + c.height));
+    const z = useCanvasStore.getState().zoom;
+    setPan({
+      x: window.innerWidth / 2 - ((left + right) / 2) * z,
+      y: window.innerHeight / 2 - ((top + bottom) / 2) * z,
+    });
+  }, [setPan]);
+
   useEffect(() => {
     if (!fetchedAnnotations) return;
 

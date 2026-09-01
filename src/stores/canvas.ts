@@ -231,11 +231,13 @@ export const useCanvasStore = create<CanvasState>()(
     // (native wheel, a code window's forwarded wheel, anything future)
     // goes through, so nothing needs to remember to clamp itself.
     // Opens zoomed out: at 1.0 a single card filled most of the viewport and
-    // its burst ran off screen. 0.55 puts most of the grid in view on load
-    // and leaves a burst comfortably inside the edges.
+    // its burst ran off screen. 0.55 puts the whole grid in view on load and
+    // leaves a burst comfortably inside the edges. Pan is set on mount by
+    // Canvas.tsx, which centres the card grid against the real viewport
+    // size — this initial value is only what SSR renders before hydration.
     zoom: 0.55,
     setZoom: (zoom) => set({ zoom: clampZoom(zoom) }),
-    pan: { x: -100, y: -80 },
+    pan: { x: 0, y: 0 },
     setPan: (pan) => set({ pan: clampPan(pan.x, pan.y, get().zoom) }),
 
     // Annotations
